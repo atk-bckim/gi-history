@@ -1,0 +1,322 @@
+---
+id: "github-copilot-cli"
+slug: "/github-copilot/cli"
+locale: "en"
+track: "github-copilot"
+level: "intermediate"
+title: "Copilot CLI and Approval-Based Terminal Workflows"
+summary: "Understand Copilot CLI as a local terminal agent, then operate file edits, command execution, MCP connections, custom instructions, and Agent Skills with explicit boundaries."
+investigationDate: "2026-06-22"
+updatedAt: "2026-06-22"
+sourceRefs:
+  - id: "github-copilot-cli-overview"
+    title: "Using GitHub Copilot CLI"
+    url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/overview"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-cli-comparison"
+    title: "Comparing GitHub Copilot CLI customization features"
+    url: "https://docs.github.com/en/copilot/concepts/agents/copilot-cli/comparing-cli-features"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-cli-instructions"
+    title: "Adding custom instructions for GitHub Copilot CLI"
+    url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-custom-instructions"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-cli-skills"
+    title: "Adding agent skills for GitHub Copilot CLI"
+    url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-agents-responsible-use"
+    title: "Application card: GitHub Copilot Agents"
+    url: "https://docs.github.com/en/copilot/responsible-use/agents"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-mcp"
+    title: "About Model Context Protocol (MCP)"
+    url: "https://docs.github.com/en/copilot/concepts/context/mcp"
+    publisher: "GitHub Docs"
+  - id: "vscode-agent-skills"
+    title: "Use Agent Skills in VS Code"
+    url: "https://code.visualstudio.com/docs/agent-customization/agent-skills"
+    publisher: "Visual Studio Code Docs"
+---
+
+# Copilot CLI and Approval-Based Terminal Workflows
+
+Investigation date: 2026-06-22
+
+Copilot CLI is an agentic development tool that works from a terminal session. GitHub's current CLI documentation frames the tool as something that can answer questions, inspect a repository, edit files, run commands, use tools, load skills, and connect to external systems through MCP. That makes it different from asking for a shell command in chat. You are operating a local agent that can observe and change your workspace.
+
+The educational goal is to learn three habits:
+
+- describe the task as a bounded development loop
+- approve tools and commands deliberately
+- turn repeated workflows into instructions, skills, hooks, custom agents, or MCP configuration
+
+## CLI Mental Model
+
+IDE Chat starts from editor context. Copilot CLI starts from the shell context: current directory, visible files, installed tools, package scripts, test output, git state, and environment configuration. The same request should therefore be more operational in CLI than in a chat panel.
+
+| Situation | Why CLI fits | Example request |
+|---|---|---|
+| Repository orientation | It can search files, inspect scripts, and summarize structure. | "Inspect this repository and identify the files involved in login. Do not edit files yet." |
+| Focused repair | It can edit the relevant files and rerun a narrow verification command. | "Fix only the date parser regression and run the parser unit tests." |
+| Environment diagnosis | It can observe actual command failures instead of guessing from memory. | "Investigate why `npm run build` fails. Report the likely cause before changing files." |
+| Repeated verification | It can patch, run tests, read failures, and continue. | "Fix type errors in small batches and rerun `npm run typecheck` after each batch." |
+| Tool-assisted work | It can combine local tools with MCP-provided tools when approved or configured. | "Use the docs MCP server only for read-only API reference lookup, then patch the local test." |
+
+The CLI is strongest when command output is useful evidence. It is weakest when the task requires hidden production context, secrets, subjective product judgment, or broad architectural direction that has not been written down.
+
+## Permission Boundaries First
+
+GitHub Docs describe CLI tools as abilities Copilot can use to search, view file contents, edit, run tasks, invoke skills, or call MCP-provided tools. Copilot decides when tools are needed, but the user can allow or deny tool use for a task, session, or future sessions. Treat each approval as a policy decision, not a formality.
+
+Define these boundaries before work starts:
+
+- allowed edit paths, such as `src/payments/**` and `tests/payments/**`
+- forbidden paths, such as `.env*`, `infra/prod/**`, `migrations/**`, and generated lockfiles unless they are in scope
+- allowed commands, such as `rg`, `npm test -- payments`, `npm run typecheck`, and read-only git inspection
+- commands that need discussion first, such as `npm install`, `docker compose`, database migrations, or long-running integration tests
+- commands that are not acceptable, such as destructive deletes, remote deploys, credential printing, or force pushes
+- MCP servers and tools that are allowed, especially whether they are read-only or write-capable
+
+Put those rules in the prompt. Do not rely on the agent to infer them from team culture.
+
+```text
+Work only in the current repository.
+You may edit only src/payments/** and tests/payments/**.
+Do not read .env files, run migrations, install packages, push to git, deploy, or call write-capable MCP tools.
+First inspect the failure and write a plan with the exact files you expect to change.
+After I approve the plan, implement and verify with npm run test -- payments and npm run typecheck.
+```
+
+## Tool Approval Matrix
+
+Use a simple approval matrix during a CLI session.
+
+| Tool or action | Usually approve when | Pause or deny when |
+|---|---|---|
+| Read/search files | The path is inside the stated scope and not sensitive. | The path is outside scope, contains secrets, or belongs to another team. |
+| Edit files | The file was named in the plan or is clearly needed for the approved fix. | The edit touches generated files, migrations, infra, auth, billing, or unrelated modules. |
+| Run tests or typecheck | The command is local, deterministic, and already part of project scripts. | The command starts external services, writes data, or runs the whole suite unnecessarily. |
+| Install packages | The task explicitly requires dependency work and the package choice was reviewed. | The agent wants to install a package to avoid understanding existing code. |
+| Git commands | Read-only inspection is needed for context. | The command commits, pushes, rebases, resets, or changes branches without explicit instruction. |
+| MCP tool call | The server is approved and the tool is necessary for the task. | The tool can mutate external systems, broaden access, or expose private data without review. |
+
+For task-level approvals, approve only the action needed for the current step. For session-level approvals, approve only low-risk tools such as read/search commands in the current repository. For future-session approvals, use them sparingly and only for stable, low-risk tools that match team policy.
+
+## Worked Example: Contained Test Repair
+
+Scenario: a `payments` unit test fails after a date-format change. The goal is to let Copilot CLI investigate, patch, and verify without drifting into billing logic or dependencies.
+
+Prompt:
+
+```text
+Investigate the failing payments date-format test.
+
+Boundaries:
+- You may read src/payments/**, tests/payments/**, package.json, and relevant test config.
+- You may edit only src/payments/** and tests/payments/**.
+- Do not install packages, change lockfiles, run migrations, use network commands, or push to git.
+- If you need another file, ask first and explain why.
+
+Workflow:
+1. Run the narrow failing test if you can identify it.
+2. Summarize the observed failure and likely cause.
+3. Propose a plan with exact files before editing.
+4. After approval, patch the smallest viable change.
+5. Verify with npm run test -- payments.
+```
+
+Good approval decisions:
+
+- approve `rg "formatPaymentDate|payments" src tests package.json`
+- approve reading the matching payment files
+- approve `npm run test -- payments` if it is an existing local script
+- deny editing `src/billing/**` unless the agent explains a direct dependency and you revise the scope
+- deny `npm install dayjs` if the existing project already has date helpers
+
+Review the final result by asking:
+
+- Did the failure come from observed test output?
+- Did the diff stay inside the allowed paths?
+- Did Copilot avoid broad refactoring?
+- Did verification run after the edit?
+- Is there a new instruction or regression test that would prevent the same drift next time?
+
+## Custom Instructions for CLI
+
+Custom instructions are the baseline memory for a repository or user. They are best for rules that should influence most work, not one-off task details.
+
+Good CLI instructions include:
+
+- a short repository map
+- approved local commands and their expected purpose
+- commands that are slow, external, or require explicit approval
+- sensitive paths and data handling rules
+- testing order from narrow to broad
+- how the agent should report plans, tool failures, diffs, and residual risk
+
+Example:
+
+```md
+# Copilot CLI instructions
+
+- Inspect the current directory before proposing changes.
+- Prefer `rg` for search and existing package scripts for verification.
+- Before editing, list the files you expect to modify and the verification command you will run.
+- Do not run package installation, migrations, deployment, git push, or credential-printing commands unless the user explicitly asks.
+- Treat `.env*`, production config, customer exports, and generated secrets as out of scope unless the task explicitly names them.
+- After editing, run the narrowest relevant test first, then broader checks if the change touches shared behavior.
+```
+
+Avoid stuffing task-specific acceptance criteria into permanent instructions. If the text applies only to one bug or one issue, keep it in the prompt or a prompt file.
+
+## MCP Guidance
+
+MCP extends Copilot by connecting it to other systems. GitHub Docs describe MCP as working across major Copilot surfaces, including IDEs, Copilot CLI, GitHub.com, and agent delegation. In CLI, MCP deserves special care because an external tool can become part of the same loop as local file edits and command execution.
+
+Classify each MCP server before use:
+
+| MCP server type | Example | Default stance |
+|---|---|---|
+| Read-only reference | language docs, API docs, design system docs | Allow for scoped lookup. |
+| Read-only project data | issue tracker, internal handbook, dependency inventory | Allow only if the task needs that context. |
+| Write-capable collaboration | issue updates, PR comments, ticket status changes | Ask before every mutation. |
+| Runtime or data access | database, production logs, cloud console | Avoid in CLI task sessions unless there is a documented, approved process. |
+
+MCP approval prompt:
+
+```text
+You may use the docs MCP server for read-only API reference lookup.
+Do not use MCP tools that create, update, delete, deploy, comment, label, or change external state.
+If you think a write-capable MCP tool is required, stop and explain the exact tool, arguments, and expected effect.
+```
+
+Security checkpoints:
+
+- confirm who owns the server and where its configuration lives
+- review the tool names and descriptions before enabling the server
+- verify how tokens are stored and whether prompts or tool results are logged
+- prefer explicit tool allowlists over broad server access
+- separate read-only research sessions from write-capable operational sessions
+- remove or disable servers that are not needed for the current repository
+
+## Skills, Custom Agents, Hooks, and Plugins
+
+GitHub's CLI customization comparison separates several mechanisms. Choose the lightest mechanism that solves the real problem.
+
+| Mechanism | Best use | Example |
+|---|---|---|
+| Custom instructions | Rules that should apply to most repository work. | "Always run `npm run typecheck` after TypeScript changes." |
+| Prompt file | A repeatable single request. | "Generate a release note draft from merged PRs." |
+| Agent Skill | A specialized workflow with instructions, examples, scripts, or references. | "Run accessibility checks, parse output, and produce a remediation table." |
+| Tool approval | Let Copilot search, edit, run tasks, invoke skills, or use MCP tools. | "Approve read/search for this task, but not package installation." |
+| Hook | Add guardrails or automation around tool use or session events. | "Block edits under `infra/prod/**` or run a scanner after edits." |
+| MCP server | Add tools or data from an external system. | "Read Jira acceptance criteria or query internal API docs." |
+| Custom agent | Give a specialist agent a constrained role and toolset. | "Use a read-only `security-reviewer` agent for audit tasks." |
+| Plugin | Distribute a bundle of skills, agents, hooks, or MCP settings. | "Install the company engineering plugin for standard workflows." |
+
+### Mini Skill Example
+
+Use a skill when the work requires more than a prompt: instructions plus scripts, examples, or reference files. GitHub's CLI skill docs describe skills as folders with a required `SKILL.md` file and optional resources.
+
+Project layout:
+
+```text
+.github/skills/api-contract-review/
+  SKILL.md
+  examples/report-template.md
+  scripts/check-openapi.mjs
+```
+
+`SKILL.md`:
+
+```md
+---
+name: api-contract-review
+description: Use when reviewing REST API changes against the OpenAPI contract and compatibility rules.
+---
+
+# API Contract Review
+
+1. Inspect the changed route files and the OpenAPI spec.
+2. Run `node .github/skills/api-contract-review/scripts/check-openapi.mjs`.
+3. Report breaking changes, missing tests, and documentation drift.
+4. Do not edit production routes unless the user explicitly approves implementation.
+```
+
+After adding a skill during a CLI session, reload skills and inspect the loaded metadata:
+
+```text
+/skills reload
+/skills list
+/skills info api-contract-review
+```
+
+If a skill should apply to every task, it is probably custom instructions. If it needs new external tools, it probably needs MCP. If it needs a separate role with different permissions, it is probably a custom agent.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Recovery |
+|---|---|---|
+| Copilot keeps asking to edit unrelated files. | The prompt did not state allowed and forbidden paths clearly enough, or the agent found a real cross-module dependency. | Stop the session, restate scope, and require a new plan before edits. |
+| The agent wants to install a package for a small fix. | It is optimizing for convenience instead of local conventions. | Ask it to search existing helpers and explain why dependency-free repair is impossible. |
+| A skill does not appear. | The folder is in the wrong location, the file is not named `SKILL.md`, or the CLI session has not reloaded skills. | Check the path, frontmatter name and description, then run `/skills reload` and `/skills info`. |
+| MCP results are surprising or too broad. | The server exposes more tools or data than the task needs. | Disable the server for the session or restrict the allowed tools before continuing. |
+| The test command fails because setup is missing. | The repository needs a service, fixture, or environment variable not available in the current shell. | Ask Copilot to diagnose setup from docs and scripts, not to invent secrets or mutate external systems. |
+| The output is plausible but unverified. | The session ended after editing without running checks. | Ask for the exact verification command, run it, and treat unverified code as a draft. |
+| Approvals become noisy. | The task is too broad or the safe tools were not scoped up front. | Split the task and approve only read/search or narrow test commands for the next step. |
+
+## Practice
+
+Practice run 1: no-write investigation.
+
+```text
+Inspect why the checkout tests are failing.
+Do not edit files.
+You may read only src/checkout/**, tests/checkout/**, package.json, and test config.
+Run no commands except rg and the narrow checkout test.
+Return a diagnosis, a file list, and a proposed verification command.
+```
+
+Practice run 2: convert repeated workflow into a skill.
+
+```text
+Design a Copilot CLI skill for reviewing API contract changes.
+Create only the skill outline and example commands.
+Do not edit application code.
+Include when the skill should not be used.
+```
+
+Practice run 3: rehearse MCP approval.
+
+```text
+You may use only the read-only docs MCP server.
+Before each MCP call, state the tool name, why it is needed, and what data it may return.
+Do not use any tool that creates, updates, comments, labels, deploys, or deletes.
+```
+
+## Practice Checklist
+
+Before the session:
+
+- Is the current directory the intended project root?
+- Did you state allowed and forbidden paths?
+- Did you separate read-only, edit, command, git, network, and MCP permissions?
+- Did you identify the narrowest useful test or typecheck command?
+- Did you decide whether the task is plan-only, implementation, or verification?
+
+During the session:
+
+- Are tool approvals consistent with the prompt?
+- Is Copilot using observed output rather than guessing?
+- Are extra files or commands justified before approval?
+- Are MCP tools read-only unless explicitly reviewed?
+- Is the task still small enough to finish and review?
+
+After the session:
+
+- Did the final summary include changed files, verification output, and residual risk?
+- Did you inspect the diff rather than trusting the summary?
+- Did any repeated instruction belong in custom instructions, a prompt file, a skill, or a hook?
+- Did any unsafe or noisy tool request reveal a policy gap?
+- Can the same workflow be taught to a teammate without hidden assumptions?

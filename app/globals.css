@@ -1,0 +1,170 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  background: #f7f4ee;
+  color: #171717;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(247, 244, 238, 0.96)),
+    #f7f4ee;
+  color: #171717;
+  font-family:
+    Pretendard,
+    "Noto Sans KR",
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.18);
+}
+
+.lesson-markdown {
+  color: #555047;
+}
+
+.lesson-markdown h1 {
+  margin: 0 0 1.5rem;
+  color: #171717;
+  font-size: 2.15rem;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.lesson-markdown h2 {
+  scroll-margin-top: 6rem;
+  margin: 2.5rem 0 1rem;
+  color: #171717;
+  font-size: 1.55rem;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.lesson-markdown h3 {
+  scroll-margin-top: 6rem;
+  margin: 2rem 0 0.75rem;
+  color: #171717;
+  font-size: 1.15rem;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.lesson-markdown p,
+.lesson-markdown li {
+  font-size: 1rem;
+  line-height: 1.85;
+}
+
+.lesson-markdown p {
+  margin: 1rem 0;
+}
+
+.lesson-markdown ul,
+.lesson-markdown ol {
+  margin: 1rem 0 1.25rem;
+  padding-left: 1.4rem;
+}
+
+.lesson-markdown table {
+  display: block;
+  margin: 1.4rem 0;
+  max-width: 100%;
+  width: 100%;
+  border-collapse: collapse;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.lesson-markdown th,
+.lesson-markdown td {
+  border: 1px solid #ded8cc;
+  padding: 0.8rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.lesson-markdown th {
+  background: #f0ece4;
+  color: #171717;
+  font-weight: 700;
+}
+
+.lesson-markdown code {
+  border-radius: 0.25rem;
+  background: #f0ece4;
+  padding: 0.12rem 0.3rem;
+  color: #171717;
+  font-family:
+    "JetBrains Mono",
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  font-size: 0.9em;
+}
+
+.lesson-markdown pre {
+  margin: 1.4rem 0;
+  overflow-x: auto;
+  border-radius: 0.65rem;
+  background: #161b22;
+  padding: 1rem;
+}
+
+.lesson-markdown pre code {
+  background: transparent;
+  padding: 0;
+  color: #f8fafc;
+}
+
+.lesson-markdown blockquote {
+  margin: 1.4rem 0;
+  border-left: 4px solid #2563eb;
+  background: #f0ece4;
+  padding: 0.8rem 1rem;
+  color: #4b5563;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

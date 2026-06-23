@@ -1,0 +1,322 @@
+---
+id: "github-copilot-cli"
+slug: "/github-copilot/cli"
+locale: "ko"
+track: "github-copilot"
+level: "intermediate"
+title: "Copilot CLI와 승인 기반 터미널 워크플로"
+summary: "Copilot CLI를 로컬 터미널의 agentic 개발 도구로 이해하고 파일 수정, 명령 실행, MCP 연결, custom instructions, Agent Skills를 안전하게 운영하는 방법을 배운다."
+investigationDate: "2026-06-22"
+updatedAt: "2026-06-22"
+sourceRefs:
+  - id: "github-copilot-cli-overview"
+    title: "Using GitHub Copilot CLI"
+    url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/overview"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-cli-comparison"
+    title: "Comparing GitHub Copilot CLI customization features"
+    url: "https://docs.github.com/en/copilot/concepts/agents/copilot-cli/comparing-cli-features"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-cli-instructions"
+    title: "Adding custom instructions for GitHub Copilot CLI"
+    url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-custom-instructions"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-cli-skills"
+    title: "Adding agent skills for GitHub Copilot CLI"
+    url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-agents-responsible-use"
+    title: "Application card: GitHub Copilot Agents"
+    url: "https://docs.github.com/en/copilot/responsible-use/agents"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-mcp"
+    title: "About Model Context Protocol (MCP)"
+    url: "https://docs.github.com/en/copilot/concepts/context/mcp"
+    publisher: "GitHub Docs"
+  - id: "vscode-agent-skills"
+    title: "Use Agent Skills in VS Code"
+    url: "https://code.visualstudio.com/docs/agent-customization/agent-skills"
+    publisher: "Visual Studio Code Docs"
+---
+
+# Copilot CLI와 승인 기반 터미널 워크플로
+
+조사 기준일: 2026-06-22
+
+Copilot CLI는 터미널 세션에서 동작하는 agentic 개발 도구다. GitHub의 최신 CLI 문서는 이 도구가 질문에 답하고, 저장소를 조사하고, 파일을 수정하고, 명령을 실행하고, 도구를 사용하고, skills를 로드하고, MCP를 통해 외부 시스템에 연결할 수 있다고 설명한다. 따라서 CLI 사용은 "셸 명령을 물어보는 것"과 다르다. 사용자는 workspace를 관찰하고 변경할 수 있는 로컬 에이전트를 운영하는 것이다.
+
+이 수업의 목표는 세 가지 습관을 익히는 것이다.
+
+- 작업을 경계가 있는 개발 루프로 설명한다
+- 도구와 명령을 의식적으로 승인한다
+- 반복되는 워크플로를 instructions, skills, hooks, custom agents, MCP 설정으로 승격한다
+
+## CLI 사고 모델
+
+IDE Chat은 편집기 컨텍스트에서 시작한다. Copilot CLI는 셸 컨텍스트에서 시작한다. 현재 디렉터리, 보이는 파일, 설치된 도구, package scripts, 테스트 출력, git 상태, 환경 설정이 바로 작업 재료가 된다. 그래서 같은 요청도 CLI에서는 더 운영 지향적으로 써야 한다.
+
+| 상황 | CLI에 적합한 이유 | 요청 예시 |
+|---|---|---|
+| 저장소 파악 | 파일 검색, 스크립트 확인, 구조 요약을 직접 할 수 있다. | "이 저장소를 조사해서 로그인에 관련된 파일을 찾아줘. 아직 수정하지 마." |
+| 좁은 수정 | 관련 파일을 수정하고 좁은 검증 명령을 다시 실행할 수 있다. | "date parser 회귀만 고치고 parser unit test를 실행해." |
+| 환경 진단 | 기억에 의존하지 않고 실제 명령 실패를 관찰할 수 있다. | "`npm run build`가 왜 실패하는지 조사해. 파일 수정 전 원인을 보고해." |
+| 반복 검증 | 패치, 테스트 실행, 실패 분석, 재수정을 반복할 수 있다. | "타입 오류를 작은 묶음으로 고치고 매번 `npm run typecheck`를 다시 실행해." |
+| 도구 기반 작업 | 승인 또는 설정된 범위 안에서 로컬 도구와 MCP 도구를 함께 쓸 수 있다. | "읽기 전용 API 문서 조회에는 docs MCP server만 쓰고, 로컬 테스트를 패치해." |
+
+CLI는 명령 출력이 증거가 되는 작업에 강하다. 숨겨진 운영 컨텍스트, secrets, 주관적인 제품 판단, 문서화되지 않은 대규모 아키텍처 방향이 필요한 작업에는 약하다.
+
+## 권한 경계를 먼저 정한다
+
+GitHub Docs는 CLI tools를 Copilot이 검색, 파일 내용 확인, 수정, task 실행, skill 호출, MCP 도구 호출 등에 사용하는 능력으로 설명한다. Copilot은 필요한 도구를 스스로 판단하지만, 사용자는 task, session, future sessions 단위로 도구 사용을 허용하거나 거부할 수 있다. 각 승인은 형식적인 클릭이 아니라 정책 결정이다.
+
+작업 시작 전에 다음 경계를 정한다.
+
+- 수정 허용 경로: 예: `src/payments/**`, `tests/payments/**`
+- 금지 경로: 예: `.env*`, `infra/prod/**`, `migrations/**`, 범위 밖 generated lockfiles
+- 실행 허용 명령: 예: `rg`, `npm test -- payments`, `npm run typecheck`, 읽기 전용 git 조사
+- 실행 전 논의가 필요한 명령: 예: `npm install`, `docker compose`, DB migration, 긴 integration test
+- 허용하지 않을 명령: 예: 파괴적 삭제, 원격 배포, credential 출력, force push
+- 허용할 MCP 서버와 도구, 특히 읽기 전용인지 write-capable인지
+
+이 규칙은 프롬프트에 그대로 쓴다. 팀 문화에서 추론되기를 기대하면 안 된다.
+
+```text
+현재 repository 안에서만 작업해.
+수정은 src/payments/** 와 tests/payments/** 에서만 가능해.
+.env 파일 읽기, migration 실행, package 설치, git push, 배포, write-capable MCP tool 호출은 하지 마.
+먼저 실패를 조사하고 수정할 파일을 정확히 적은 계획을 작성해.
+내가 계획을 승인하면 구현하고 npm run test -- payments 와 npm run typecheck 로 검증해.
+```
+
+## 도구 승인 매트릭스
+
+CLI 세션에서는 간단한 승인 매트릭스를 사용한다.
+
+| 도구 또는 동작 | 보통 승인하는 경우 | 멈추거나 거부할 경우 |
+|---|---|---|
+| 파일 읽기와 검색 | 경로가 명시된 범위 안이고 민감하지 않다. | 범위 밖, secrets 포함, 다른 팀 소유 파일이다. |
+| 파일 수정 | 계획에 이름이 있거나 승인된 수정에 명확히 필요하다. | generated files, migrations, infra, auth, billing, 무관한 모듈을 건드린다. |
+| 테스트와 타입체크 실행 | 로컬, deterministic, 기존 project scripts에 있다. | 외부 서비스를 시작하거나 데이터를 쓰거나 불필요하게 전체 suite를 실행한다. |
+| package 설치 | dependency 작업이 명시되어 있고 package 선택을 검토했다. | 기존 코드를 이해하지 않고 편의상 새 package를 설치하려 한다. |
+| git 명령 | 읽기 전용 조사가 필요하다. | commit, push, rebase, reset, branch 변경을 명시적 요청 없이 하려 한다. |
+| MCP tool 호출 | 서버가 승인되어 있고 task에 필요한 도구다. | 외부 시스템을 변경하거나 접근 범위를 넓히거나 private data를 노출할 수 있다. |
+
+Task-level approval은 현재 단계에 필요한 동작만 승인한다. Session-level approval은 현재 저장소의 읽기와 검색처럼 낮은 위험의 도구에만 사용한다. Future-session approval은 팀 정책과 일치하는 안정적인 저위험 도구에 제한적으로 사용한다.
+
+## 예제: 제한된 테스트 수정
+
+시나리오: date-format 변경 이후 `payments` unit test가 실패한다. 목표는 Copilot CLI가 조사, 패치, 검증을 하되 billing logic이나 dependency 변경으로 범위가 번지지 않게 하는 것이다.
+
+프롬프트:
+
+```text
+payments date-format 테스트 실패를 조사해.
+
+경계:
+- 읽기는 src/payments/**, tests/payments/**, package.json, 관련 test config만 가능해.
+- 수정은 src/payments/** 와 tests/payments/** 만 가능해.
+- package 설치, lockfile 변경, migration, network command, git push는 하지 마.
+- 다른 파일이 필요하면 먼저 이유를 설명하고 물어봐.
+
+워크플로:
+1. 실패 테스트를 식별할 수 있으면 좁은 테스트를 실행해.
+2. 관찰한 실패와 가능한 원인을 요약해.
+3. 수정 전 정확한 파일이 포함된 계획을 제안해.
+4. 승인 후 가장 작은 수정으로 패치해.
+5. npm run test -- payments 로 검증해.
+```
+
+좋은 승인 판단:
+
+- `rg "formatPaymentDate|payments" src tests package.json` 승인
+- 일치한 payment 파일 읽기 승인
+- 기존 로컬 스크립트라면 `npm run test -- payments` 승인
+- agent가 직접 의존성을 설명하고 사용자가 범위를 바꾸기 전에는 `src/billing/**` 수정 거부
+- 기존 project에 date helper가 있다면 `npm install dayjs` 거부
+
+최종 결과는 다음 질문으로 검토한다.
+
+- 실패 원인이 실제 테스트 출력에서 나왔는가
+- diff가 허용 경로 안에 머물렀는가
+- Copilot이 큰 refactor를 피했는가
+- 수정 후 검증이 실행되었는가
+- 다음에 같은 범위 이탈을 막을 instruction이나 regression test가 생겼는가
+
+## CLI용 Custom Instructions
+
+Custom instructions는 repository 또는 사용자 수준의 기본 기억이다. 대부분의 작업에 적용될 규칙에 적합하고, 한 번만 쓰는 task 세부사항에는 적합하지 않다.
+
+좋은 CLI instructions에는 다음이 들어간다.
+
+- 짧은 repository 지도
+- 승인된 local commands와 용도
+- 느리거나 외부 시스템을 건드리거나 명시적 승인이 필요한 명령
+- sensitive paths와 data handling 규칙
+- 좁은 검증에서 넓은 검증으로 가는 testing order
+- 계획, tool failure, diff, residual risk 보고 방식
+
+예시:
+
+```md
+# Copilot CLI instructions
+
+- Inspect the current directory before proposing changes.
+- Prefer `rg` for search and existing package scripts for verification.
+- Before editing, list the files you expect to modify and the verification command you will run.
+- Do not run package installation, migrations, deployment, git push, or credential-printing commands unless the user explicitly asks.
+- Treat `.env*`, production config, customer exports, and generated secrets as out of scope unless the task explicitly names them.
+- After editing, run the narrowest relevant test first, then broader checks if the change touches shared behavior.
+```
+
+Task-specific acceptance criteria를 permanent instructions에 넣지 않는다. 특정 bug나 issue에만 적용되는 문장은 prompt나 prompt file에 둔다.
+
+## MCP 운영 가이드
+
+MCP는 Copilot을 다른 시스템에 연결한다. GitHub Docs는 MCP가 IDE, Copilot CLI, GitHub.com, agent delegation을 포함한 주요 Copilot 표면에서 동작한다고 설명한다. CLI에서는 MCP를 특히 조심해야 한다. 외부 도구가 로컬 파일 수정과 명령 실행 루프의 일부가 되기 때문이다.
+
+사용 전 MCP 서버를 분류한다.
+
+| MCP server type | 예시 | 기본 태도 |
+|---|---|---|
+| 읽기 전용 reference | language docs, API docs, design system docs | 범위가 있는 lookup만 허용한다. |
+| 읽기 전용 project data | issue tracker, internal handbook, dependency inventory | task에 필요한 경우에만 허용한다. |
+| Write-capable collaboration | issue updates, PR comments, ticket status changes | 모든 mutation 전에 묻도록 한다. |
+| Runtime 또는 data access | database, production logs, cloud console | 문서화된 승인 절차 없이는 CLI task session에서 피한다. |
+
+MCP 승인 프롬프트:
+
+```text
+읽기 전용 API reference 조회에는 docs MCP server만 사용할 수 있어.
+생성, 수정, 삭제, 배포, comment, label, 외부 상태 변경을 하는 MCP tool은 사용하지 마.
+write-capable MCP tool이 필요하다고 판단하면 멈추고 정확한 tool, arguments, expected effect를 설명해.
+```
+
+보안 체크포인트:
+
+- server 소유자와 설정 위치를 확인한다
+- server enable 전에 tool name과 description을 검토한다
+- token 저장 위치와 prompt 또는 tool result logging 여부를 확인한다
+- broad server access보다 명시적 tool allowlist를 선호한다
+- 읽기 전용 research session과 write-capable operational session을 분리한다
+- 현재 repository에 필요 없는 server는 제거하거나 비활성화한다
+
+## Skills, Custom Agents, Hooks, Plugins
+
+GitHub의 CLI customization 비교 문서는 여러 수단을 구분한다. 실제 문제를 해결하는 가장 가벼운 수단을 고른다.
+
+| 수단 | 가장 적합한 용도 | 예시 |
+|---|---|---|
+| Custom instructions | 대부분의 repository 작업에 적용될 규칙 | "TypeScript 변경 후에는 항상 `npm run typecheck`를 실행한다." |
+| Prompt file | 반복되는 단일 요청 | "merged PR을 바탕으로 release note 초안을 작성한다." |
+| Agent Skill | instructions, examples, scripts, references가 필요한 전문 workflow | "accessibility check를 실행하고 결과를 remediation table로 만든다." |
+| Tool approval | Copilot의 검색, 수정, task 실행, skill 호출, MCP tool 사용 허용 | "이 task에는 read/search만 승인하고 package 설치는 승인하지 않는다." |
+| Hook | tool use 또는 session event 주변의 guardrails와 automation | "`infra/prod/**` 수정 차단 또는 수정 후 scanner 실행" |
+| MCP server | 외부 시스템의 도구나 데이터를 추가 | "Jira acceptance criteria를 읽거나 internal API docs를 조회한다." |
+| Custom agent | specialist agent에 제한된 역할과 toolset 부여 | "읽기 전용 `security-reviewer` agent를 audit task에 사용한다." |
+| Plugin | skills, agents, hooks, MCP settings bundle 배포 | "표준 workflow용 company engineering plugin 설치" |
+
+### 작은 Skill 예제
+
+작업이 prompt 이상을 요구할 때 skill을 쓴다. 즉 instructions와 scripts, examples, reference files가 함께 필요할 때다. GitHub의 CLI skill 문서는 skills를 필수 `SKILL.md` 파일과 선택적 resource를 가진 folder로 설명한다.
+
+Project layout:
+
+```text
+.github/skills/api-contract-review/
+  SKILL.md
+  examples/report-template.md
+  scripts/check-openapi.mjs
+```
+
+`SKILL.md`:
+
+```md
+---
+name: api-contract-review
+description: Use when reviewing REST API changes against the OpenAPI contract and compatibility rules.
+---
+
+# API Contract Review
+
+1. Inspect the changed route files and the OpenAPI spec.
+2. Run `node .github/skills/api-contract-review/scripts/check-openapi.mjs`.
+3. Report breaking changes, missing tests, and documentation drift.
+4. Do not edit production routes unless the user explicitly approves implementation.
+```
+
+CLI session 중 skill을 추가했다면 reload 후 metadata를 확인한다.
+
+```text
+/skills reload
+/skills list
+/skills info api-contract-review
+```
+
+Skill이 모든 작업에 적용되어야 한다면 custom instructions일 가능성이 크다. 새로운 외부 도구가 필요하다면 MCP가 필요할 가능성이 크다. 다른 permission을 가진 별도 역할이 필요하다면 custom agent가 더 적합하다.
+
+## 문제 해결
+
+| 증상 | 가능한 원인 | 회복 방법 |
+|---|---|---|
+| Copilot이 무관한 파일을 계속 수정하려 한다. | 허용/금지 경로가 충분히 명확하지 않거나 실제 cross-module dependency가 있다. | 세션을 멈추고 범위를 다시 적은 뒤, 수정 전 새 계획을 요구한다. |
+| 작은 수정에 package 설치를 요구한다. | 기존 convention을 찾기보다 편의를 최적화하고 있다. | 기존 helper를 검색하게 하고 dependency-free repair가 불가능한 이유를 설명하게 한다. |
+| Skill이 보이지 않는다. | folder 위치가 틀렸거나 파일명이 `SKILL.md`가 아니거나 CLI session이 reload되지 않았다. | path, frontmatter name/description을 확인하고 `/skills reload`, `/skills info`를 실행한다. |
+| MCP 결과가 예상보다 넓거나 이상하다. | server가 task에 필요한 것보다 많은 tool 또는 data를 노출한다. | session에서 server를 비활성화하거나 allowed tools를 제한한 뒤 계속한다. |
+| setup 부족으로 test command가 실패한다. | 현재 shell에 필요한 service, fixture, environment variable이 없다. | Copilot에게 docs와 scripts 기반으로 setup을 진단하게 하고 secrets를 만들거나 외부 시스템을 바꾸게 하지 않는다. |
+| 출력은 그럴듯하지만 검증되지 않았다. | 파일 수정 후 check를 실행하지 않고 세션이 끝났다. | 정확한 verification command를 요구하고 실행한다. 검증되지 않은 코드는 draft로 취급한다. |
+| approval prompt가 너무 많다. | task가 너무 넓거나 안전한 도구 범위를 미리 정하지 않았다. | task를 쪼개고 다음 단계에는 read/search 또는 좁은 test command만 승인한다. |
+
+## 실습
+
+실습 흐름 1: 쓰기 없는 조사.
+
+```text
+checkout 테스트가 왜 실패하는지 조사해.
+파일은 수정하지 마.
+읽기는 src/checkout/**, tests/checkout/**, package.json, test config만 가능해.
+명령은 rg와 좁은 checkout test 외에는 실행하지 마.
+진단, 파일 목록, 제안 verification command를 반환해.
+```
+
+실습 흐름 2: 반복 workflow를 skill로 전환.
+
+```text
+API contract 변경 리뷰용 Copilot CLI skill을 설계해.
+skill outline과 example commands만 작성해.
+application code는 수정하지 마.
+skill을 쓰면 안 되는 경우도 포함해.
+```
+
+실습 흐름 3: MCP approval 리허설.
+
+```text
+읽기 전용 docs MCP server만 사용할 수 있어.
+각 MCP call 전에 tool name, 필요한 이유, 반환될 수 있는 data를 설명해.
+생성, 수정, comment, label, 배포, 삭제를 하는 tool은 사용하지 마.
+```
+
+## 실습 체크리스트
+
+세션 전:
+
+- 현재 디렉터리가 의도한 project root인가
+- 허용 경로와 금지 경로를 썼는가
+- 읽기 전용, 수정, 명령, git, network, MCP 권한을 분리했는가
+- 가장 좁은 유용한 test 또는 typecheck command를 정했는가
+- 작업이 plan-only, implementation, verification 중 무엇인지 정했는가
+
+세션 중:
+
+- tool approval이 프롬프트와 일치하는가
+- Copilot이 추측이 아니라 관찰한 출력에 기반하는가
+- 추가 파일이나 명령이 승인 전에 설명되었는가
+- MCP tool은 명시적으로 검토하지 않는 한 읽기 전용인가
+- 작업이 여전히 끝내고 리뷰할 수 있을 만큼 작은가
+
+세션 후:
+
+- 최종 요약에 changed files, verification output, residual risk가 포함되었는가
+- summary를 믿기 전에 diff를 직접 확인했는가
+- 반복 지침이 custom instructions, prompt file, skill, hook에 들어갈 가치가 있는가
+- 위험하거나 시끄러운 tool request가 정책 공백을 드러냈는가
+- 같은 workflow를 숨은 가정 없이 팀원에게 가르칠 수 있는가

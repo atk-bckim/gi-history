@@ -1,0 +1,30 @@
+import { notFound } from "next/navigation";
+import { SiteHeader } from "@/components/layout/site-header";
+import { isLocale, locales, type Locale } from "@/lib/i18n/config";
+
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
+
+export default async function LocaleLayout({
+  children,
+  params
+}: Readonly<{
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+}>) {
+  const { locale } = await params;
+
+  if (!isLocale(locale)) {
+    notFound();
+  }
+
+  return (
+    <html lang={locale}>
+      <body>
+        <SiteHeader locale={locale as Locale} />
+        {children}
+      </body>
+    </html>
+  );
+}

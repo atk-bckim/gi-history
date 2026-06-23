@@ -1,0 +1,280 @@
+---
+id: "github-copilot-vscode"
+slug: "/github-copilot/vscode"
+locale: "en"
+track: "github-copilot"
+level: "intro"
+title: "Using GitHub Copilot in VS Code"
+summary: "Learn how to choose between inline suggestions, Chat, edit mode, and agent mode, then provide file, selection, codebase, and MCP tool context deliberately."
+investigationDate: "2026-06-22"
+updatedAt: "2026-06-22"
+sourceRefs:
+  - id: "vscode-chat-overview"
+    title: "Use chat in VS Code"
+    url: "https://code.visualstudio.com/docs/chat/chat-overview"
+    publisher: "Visual Studio Code Docs"
+  - id: "vscode-custom-instructions"
+    title: "Use custom instructions in VS Code"
+    url: "https://code.visualstudio.com/docs/agent-customization/custom-instructions"
+    publisher: "Visual Studio Code Docs"
+  - id: "vscode-prompt-files"
+    title: "Use prompt files in VS Code"
+    url: "https://code.visualstudio.com/docs/agent-customization/prompt-files"
+    publisher: "Visual Studio Code Docs"
+  - id: "vscode-agent-skills"
+    title: "Use Agent Skills in VS Code"
+    url: "https://code.visualstudio.com/docs/agent-customization/agent-skills"
+    publisher: "Visual Studio Code Docs"
+  - id: "vscode-trust-safety"
+    title: "Trust and safety"
+    url: "https://code.visualstudio.com/docs/agents/concepts/trust-and-safety"
+    publisher: "Visual Studio Code Docs"
+  - id: "github-copilot-mcp"
+    title: "About Model Context Protocol (MCP)"
+    url: "https://docs.github.com/en/copilot/concepts/context/mcp"
+    publisher: "GitHub Docs"
+---
+
+# Using GitHub Copilot in VS Code
+
+Investigation date: 2026-06-22
+
+Copilot in VS Code is no longer just a completion engine. Inside the same editor you can use inline suggestions, inline chat, Chat view, the Agents window, edit mode, agent mode, prompt files, custom instructions, and MCP tools. The developer role shifts from "writing better prompts" toward designing the context and execution boundary in which Copilot works.
+
+The goal of this lesson is not to memorize a product menu. It is to decide which Copilot surface fits the job, then set context and approvals before the tool starts changing code.
+
+## Copilot surfaces
+
+| Surface | Best for | Watch for |
+|---|---|---|
+| Inline suggestions | Small functions, repeated code, the next assertion in a test | Suggestions lean heavily on nearby code, so domain rules still need review. |
+| Inline chat | Quick edits, explanations, and refactors for the selected range | Keep the scope small. Multi-file work belongs in Chat view or agent mode. |
+| Chat view | Questions about code, file references, implementation discussion | Name the relevant files and expected result to improve answer quality. |
+| Edit mode | Reviewable edits across multiple files | Read the diff and verify with tests before accepting. |
+| Agent mode | Multi-step work that may include planning, file edits, commands, and test retries | Treat tool approval, sandboxing, and sensitive-file access as part of the task. |
+| Agents window | Agent-first coordination across projects or longer work | Write stricter goals, boundaries, and completion criteria. |
+
+The common failure mode is asking agent mode to "just fix it." On a surface that can call tools, your prompt becomes execution input. A useful request includes the goal, scope, forbidden actions, verification commands, and completion criteria.
+
+## Surface decision matrix
+
+A surface decision matrix turns "Which Copilot surface should I use?" into an operating choice instead of a personal preference. Start with the narrowest surface that can complete the job, then move to a more autonomous surface only when the work needs broader context, tool use, or repeated verification.
+
+| Work shape | Start with | Move to | Team rule of thumb |
+|---|---|---|---|
+| Complete the next obvious line or assertion | Inline suggestions | Inline chat | Accept only after reading the surrounding logic. |
+| Explain or change a selected function | Inline chat | Chat view | Keep the selected range small enough to review in one diff. |
+| Compare files, trace a bug, or ask architecture questions | Chat view | Edit mode | Attach the files, symbols, terminal output, and expected result. |
+| Apply a known multi-file edit | Edit mode | Agent mode | Review the generated diff before accepting changes. |
+| Investigate, edit, run commands, and retry tests | Agent mode | Agents window | Require a plan, tool boundary, and verification command. |
+| Coordinate longer work across projects | Agents window | Separate task or issue | Write explicit completion criteria and rollback expectations. |
+
+For team operation, the matrix should live near onboarding material or in a prompt file. It prevents senior engineers from using agent mode for tiny edits and prevents junior engineers from under-specifying multi-file changes.
+
+## Context targeting
+
+Copilot Chat combines your prompt with the available workspace context. VS Code continues to expand how you can attach files, selections, codebase search, terminal output, images, and tools.
+
+A stable workflow looks like this:
+
+1. Narrow the task. "Improve login" is weaker than "fix duplicate error rendering when login fails."
+2. Name the relevant files, symbols, selected code, and recent error logs.
+3. State the rules that matter: "preserve React Server Components boundaries" or "follow existing Vitest patterns."
+4. Include verification: "`npm test -- auth` and `npm run typecheck` must pass."
+5. Set the execution boundary: "Do not install packages", "do not create migrations", or "test commands are allowed."
+
+## Context pack
+
+A context pack is the small bundle of information a teammate would need before making the same change. It is not a dump of every file. It is the minimum useful context for the chosen Copilot surface.
+
+Use this shape for work that moves beyond inline suggestions:
+
+```md
+Goal:
+Fix duplicate login error rendering when credentials are rejected.
+
+Read:
+- app/auth/login-form.tsx
+- lib/auth/errors.ts
+- tests/auth/login-form.test.tsx
+
+Rules:
+- Keep the existing React Server Components boundary.
+- Do not change the public error-code names.
+- Follow the current Vitest and Testing Library style.
+
+Evidence:
+- Failing test: `npm test -- auth/login-form`
+- Observed UI: "Invalid credentials" appears twice.
+
+Allowed actions:
+- Edit the listed files and adjacent tests.
+- Run test and typecheck commands.
+
+Not allowed:
+- Do not install packages.
+- Do not create migrations.
+- Do not touch unrelated auth providers.
+
+Done when:
+- The duplicate message is gone.
+- The focused test and typecheck pass.
+- The diff is small enough for normal review.
+```
+
+Teams can store recurring context packs as prompt files when the same workflow repeats, or promote stable rules into custom instructions. Keep one-off facts, such as the current failing command, in the chat request so they do not become stale policy.
+
+## Custom instructions
+
+Custom instructions store repeated team rules so you do not have to restate them in every chat. VS Code supports `.github/copilot-instructions.md` for workspace-wide guidance, `*.instructions.md` for file-pattern-specific guidance, organization instructions, and user profile instructions.
+
+Good instruction files are short and verifiable.
+
+```md
+---
+applyTo: "**/*.ts,**/*.tsx"
+---
+
+# TypeScript rules
+
+- Preserve existing public APIs unless the task explicitly asks for a breaking change.
+- Parse untrusted input at boundaries with the existing validation helper.
+- Add or update focused tests for changed behavior.
+- Do not introduce new state libraries without an architecture note.
+```
+
+Poor instruction files grow into vague policy text such as "write good code" or "care about security." Copilot does not interpret long internal manuals like a compliance officer. Short imperative rules and concrete examples work better.
+
+## Prompt files
+
+Prompt files are reusable `.prompt.md` task templates that can be invoked like slash commands. In VS Code, workspace prompt files default to `.github/prompts`; user profile prompt files are also supported.
+
+Prompt files are different from custom instructions. Custom instructions provide background rules. Prompt files say, "run this recurring task this way."
+
+For example, a code review prompt file might look like this:
+
+```md
+---
+name: review-risky-change
+description: "Review a diff for correctness, security, and test gaps."
+agent: "agent"
+tools: ["search/codebase"]
+---
+
+Review the selected change as a senior maintainer.
+
+Focus on:
+- correctness regressions
+- missing boundary tests
+- unsafe data access
+- unnecessary public API changes
+
+Return findings first, ordered by severity. Include file paths and concrete fixes.
+```
+
+Use prompt files for lightweight single-task workflows. Use custom agents when you need a persistent role, tool restrictions, or handoffs. Use Agent Skills when the workflow needs portable instructions plus scripts and reference material.
+
+## MCP and tool context
+
+MCP, the Model Context Protocol, gives Copilot a standard way to connect to external systems. GitHub Docs describe MCP as a way to extend Copilot across IDE, Copilot CLI, GitHub.com, and agent workflows.
+
+MCP is not just "more context." It is an authorized connection. Once you connect databases, issue trackers, document stores, browsers, or internal APIs, Copilot can become more capable, but the exposed data and possible actions also expand.
+
+Before adding an MCP server, answer these questions:
+
+- Which resources and tools does it expose?
+- Is it read-only, or can it write?
+- Where are authentication tokens stored?
+- Can the user approve tool calls before execution?
+- Do logs contain prompts, code, or secrets?
+- Can teammates reproduce the same configuration?
+
+## A safe agent-mode loop
+
+Agent mode is useful for multi-step work such as editing files, running commands, and retrying tests. It still produces AI output that must be reviewed. VS Code trust and safety guidance covers workspace trust, MCP server trust, network domain trust, terminal sandboxing, and approval rules.
+
+Use this loop:
+
+1. Ask for a plan first: "Write the change plan before editing files."
+2. Approve the scope: review files, tests, and risks.
+3. Run implementation with only the needed tools enabled.
+4. Review the diff manually.
+5. Verify with tests, typecheck, lint, or app behavior.
+6. Promote repeated feedback into instructions, prompt files, tests, or lint rules.
+
+## Agent-mode dry run
+
+An agent-mode dry run is a rehearsal before you allow edits or side-effecting tools. The agent reads the context pack, inspects the workspace as needed, and returns a plan, risk list, touched-file list, and verification commands. It must not edit files yet.
+
+Example request:
+
+```md
+Use agent mode for a dry run only.
+
+Goal: fix duplicate login error rendering.
+Context pack: use the files and rules listed above.
+
+Do not edit files, run install commands, create branches, or call external services.
+You may inspect the named files and propose commands.
+
+Return:
+1. likely root cause
+2. files you would change
+3. exact verification commands
+4. risks and rollback notes
+5. anything missing from the context pack
+```
+
+Review the dry run like you would review a task plan. If it names surprising files, proposes broad refactors, or asks for unnecessary network access, narrow the prompt before continuing. A good dry run is not a substitute for code review; it is a way to catch bad scope before it becomes a diff.
+
+## Workspace trust checklist
+
+Use this workspace trust checklist before granting more autonomy, especially in repositories with MCP servers, generated code, or unfamiliar scripts.
+
+- Workspace: Is the folder trusted, from the expected repository, and free of suspicious startup scripts?
+- Instructions: Which custom instructions, prompt files, or agent skills will be loaded, and are they current?
+- MCP: Which servers are enabled, what data do they expose, and can they write?
+- Tools: Which terminal commands, file edits, browser or fetch tools, and external services are actually needed?
+- Network: Are allowed domains limited to the task, and could an allowed domain perform writes on your behalf?
+- Sandbox: Are terminal commands sandboxed when available, and do you understand that sandboxing does not cover every built-in file operation?
+- Secrets: Could prompts, logs, terminal output, or MCP responses expose tokens, private code, customer data, or credentials?
+- Review: Will every generated change be inspected in diff view and verified before commit?
+- Rollback: Is there a checkpoint, clean branch, or manual rollback plan if the agent goes too far?
+
+The point is not to block Copilot. The point is to make tool approval a conscious engineering decision instead of a reflex.
+
+## Practical worked run
+
+Pick one small bug and solve it three ways:
+
+1. Use inline chat on the selected range only.
+2. Use Chat view with file references and the test command.
+3. Use agent mode with "plan first, implement after approval."
+
+Compare answer quality, edit scope, verification effort, and where human judgment was required. The usual conclusion is simple: narrow surfaces are faster for small edits, while agent mode is stronger when the work spans files and test loops. But agent mode also fails fastest when context and permissions are poorly specified.
+
+Now turn the exercise into a practical worked run for a team bug.
+
+Scenario: a checkout page sometimes submits twice when the user presses Enter and clicks the button quickly.
+
+1. Surface decision: start in Chat view to understand the event flow. Move to agent mode only if the fix touches component code, hooks, and tests.
+2. Context pack: include the checkout component, submit hook, existing tests, a short reproduction, the expected one-submit behavior, and the focused test command.
+3. Dry run: ask agent mode for a plan without edits. Reject plans that rewrite the checkout flow or skip tests.
+4. Implementation: allow edits only in the named component, hook, and test files. Keep package installation and network access off.
+5. Verification: run the focused test first, then the broader checkout test group. Manually review the diff for accessibility and disabled-state behavior.
+6. Team learning: if the fix reveals a recurring pattern, add a short instruction such as "Form submit handlers must guard against duplicate in-flight submissions" and add a regression test template.
+
+This run teaches the practical difference between context, authority, and verification. Copilot can help with each step, but the team still owns the boundary.
+
+## Checklist
+
+- Did you write the goal and completion criteria in one sentence?
+- Did you choose the surface with the surface decision matrix before escalating to agent mode?
+- Did you prepare a context pack instead of pasting unrelated files?
+- Did you distinguish files Copilot should read from files it should avoid?
+- Are custom instructions short and current?
+- Is each prompt file limited to one recurring task?
+- Did you check MCP data access and tool permissions?
+- Did you run an agent-mode dry run before approving file edits?
+- Did you complete the workspace trust checklist before granting broader tools?
+- Did you verify generated code with tests and review?

@@ -1,0 +1,144 @@
+---
+id: "github-copilot-overview"
+slug: "/github-copilot"
+locale: "en"
+track: "github-copilot"
+level: "intro"
+title: "GitHub Copilot Overview and Learning Path"
+summary: "Map the Copilot product surfaces, plans, runtimes, context sources, approval points, and learning order before choosing VS Code, CLI, cloud agent, or code review workflows."
+investigationDate: "2026-06-22"
+updatedAt: "2026-06-22"
+sourceRefs:
+  - id: "github-copilot-overview"
+    title: "What is GitHub Copilot?"
+    url: "https://docs.github.com/en/copilot/get-started/what-is-github-copilot"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-plans"
+    title: "GitHub Copilot plans"
+    url: "https://docs.github.com/en/copilot/get-started/plans"
+    publisher: "GitHub Docs"
+  - id: "vscode-copilot-chat"
+    title: "Use chat in VS Code"
+    url: "https://code.visualstudio.com/docs/chat/copilot-chat"
+    publisher: "Visual Studio Code Docs"
+  - id: "github-copilot-cli"
+    title: "About GitHub Copilot CLI"
+    url: "https://docs.github.com/copilot/concepts/agents/about-copilot-cli"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-cloud-agent"
+    title: "About Copilot cloud agent"
+    url: "https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-cloud-agent"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-mcp"
+    title: "Extending Copilot with MCP"
+    url: "https://docs.github.com/en/copilot/concepts/context/mcp"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-code-review"
+    title: "Using GitHub Copilot code review"
+    url: "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/request-a-code-review/use-code-review"
+    publisher: "GitHub Docs"
+---
+
+# GitHub Copilot Overview and Learning Path
+
+Investigation date: 2026-06-22
+
+GitHub Copilot is not one feature. It is a family of coding assistants, chat surfaces, review helpers, terminal agents, cloud agents, custom instructions, prompt files, skills, and context connectors. The practical skill is choosing the correct surface before work starts.
+
+This overview is the operating map for the rest of the course. Use it to decide where a task should run, what context is required, what needs approval, and which lesson to open next.
+
+## Which Copilot surface should you use?
+
+| Work type | Best starting surface | Why | Verification habit |
+|---|---|---|---|
+| Finish a local function or assertion | Inline suggestion | Nearby code pattern is usually enough. | Read the final diff and run the focused test. |
+| Ask about code or APIs | VS Code Chat | It can combine prompt text with files, selection, terminal output, and codebase context. | Ask for cited files and check the answer against source. |
+| Apply a multi-file edit | VS Code edit mode or agent mode | The change can be reviewed as a diff inside the editor. | Require tests and inspect every changed file. |
+| Investigate terminal/build failures | Copilot CLI | It can observe the local shell, scripts, file tree, and command output. | Keep approvals scoped and rerun the failing command. |
+| Delegate a well-scoped issue | Cloud/coding agent | It works asynchronously in GitHub and returns branch/PR-shaped output. | Review commits, CI, logs, and acceptance criteria in the PR. |
+| Pre-review a pull request | Copilot code review | It can surface potential issues before human review. | Treat comments as review input, not automatic approval. |
+
+The main rule: narrow work stays close to the editor; long-running or asynchronous work needs stronger issue text, tests, and review gates.
+
+## Plans, accounts, and policy boundaries
+
+Copilot Individual, Copilot Business, and Copilot Enterprise are not just billing labels. They change the administrative surface, organization policy controls, enterprise features, and what a team can standardize.
+
+| Area | Individual | Copilot Business | Copilot Enterprise |
+|---|---|---|---|
+| Primary user | Solo developer | Team or organization | Organization with deeper GitHub integration |
+| Admin controls | Personal settings | Organization policy, seat management, feature controls | Enterprise-level governance and additional GitHub.com experiences |
+| Training focus | Personal productivity | Shared workflow standards and security posture | Cross-repository knowledge, governance, and scale |
+| Education risk | Learner may overfit to local habits | Teams need shared instructions and review policy | Teams need rollout, audit, and maintenance routines |
+
+For training, start by asking: who owns the account, who owns the repository, what policy controls apply, and what data can be exposed to each Copilot surface?
+
+## Context model
+
+Copilot quality depends on context. A prompt alone is rarely enough for development work.
+
+| Context source | Use it for | Failure mode |
+|---|---|---|
+| Open file and selection | Small edits, local explanation, refactors | The model may miss project-wide contracts. |
+| Codebase search | Architecture questions and symbol tracing | Search can retrieve irrelevant files if the request is vague. |
+| Terminal output | Reproducing build, test, and runtime failures | Logs can include sensitive data. |
+| Prompt files | Repeatable reviewed task patterns | Stale prompt files can encode obsolete commands. |
+| Custom instructions | Persistent team standards | Vague instructions become noise. |
+| MCP | External systems, docs, issues, browser, databases, internal APIs | Tool permissions can exceed the learner's intent. |
+
+MCP is especially powerful because it can expose both data and actions. Treat every MCP server as a permission boundary: decide whether it is read-only, whether it can write, what it logs, and whether human approval is required.
+
+## Safe operating loop
+
+Every Copilot workflow should follow the same skeleton:
+
+1. Define the job: goal, files, excluded scope, and user-visible behavior.
+2. Attach context: selected code, linked issue, failing test, docs, logs, or MCP source.
+3. Set boundaries: allowed files, forbidden commands, data restrictions, and approval gates.
+4. Run the smallest useful change.
+5. Verify: tests, typecheck, lint, build, review checklist, or manual reproduction.
+6. Capture learning: promote repeated instructions into custom instructions, prompt files, tests, or skills.
+
+The loop matters because agents can act. A good Copilot user does not only ask better questions; they design the harness that makes answers checkable.
+
+## Worked run: from bug report to PR review
+
+Scenario: a checkout form shows duplicate validation messages for guest users.
+
+| Step | Copilot surface | Request shape | Evidence |
+|---|---|---|---|
+| Orient | VS Code Chat | "Explain the validation flow using `Form.tsx`, schema file, and failing test." | File references and suspected root cause |
+| Reproduce | Copilot CLI | "Run the focused checkout validation test. Do not edit files." | Failing command output |
+| Fix | Agent mode | "Edit only checkout form/schema tests. Preserve accessibility. Run focused tests." | Diff and test result |
+| Harden | Prompt file | Convert the pattern into a reusable "validation bugfix" prompt. | Reviewed `.prompt.md` |
+| Review | Copilot code review + human review | Ask Copilot for risk comments, then have a human approve. | PR comments, CI, final sign-off |
+
+This is the pattern learners should internalize: choose the surface, constrain the job, verify with evidence, and only then expand the workflow.
+
+## Learning path
+
+1. Start with VS Code Copilot fundamentals. Learn inline suggestions, Chat, edit mode, agent mode, context targeting, prompt files, custom instructions, MCP, and trust controls.
+2. Move to Copilot CLI. Practice terminal-oriented planning, approval, command observation, and failure-driven repair.
+3. Learn cloud/coding agent delegation. Write issue-shaped tasks with acceptance criteria, file scope, and CI expectations.
+4. Add code review, security, and admin policy. Treat AI review as a supplement to human review.
+5. Study agentic AI concepts. Understand why prompt engineering expands into context, tool, harness, and loop engineering.
+6. Use labs and showcases. Practice prompt building, context stacking, agent loops, quizzes, and high-complexity AI-built web examples.
+
+## Troubleshooting map
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Copilot suggests generic code | Missing files, vague goal, or no output contract | Attach relevant files, state exact behavior, and name tests. |
+| Agent changes too many files | Scope and forbidden paths were not explicit | Restart with allowed paths and completion criteria. |
+| CLI asks for risky approval | The task implies file or command access beyond the prompt | Deny, narrow the request, and split investigation from implementation. |
+| Cloud agent returns a weak PR | Issue was too broad or lacked tests | Rewrite as a smaller task with acceptance criteria and verification command. |
+| Review comments are noisy | Rules are not encoded in tests or custom instructions | Promote repeated review standards into instructions and automated checks. |
+
+## Readiness checklist
+
+- Can you explain which Copilot surface you would use for a one-file edit, a terminal failure, a GitHub issue, and a PR review?
+- Do you know whether your account is Individual, Business, or Enterprise?
+- Are repository custom instructions short, current, and testable?
+- Are prompt files used for repeated tasks instead of one-off background rules?
+- Are MCP tools reviewed for data access, write permissions, logs, and approvals?
+- Does every agentic workflow end with evidence: test output, CI, diff review, or explicit human sign-off?

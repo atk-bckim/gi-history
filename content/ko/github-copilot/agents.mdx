@@ -1,0 +1,377 @@
+---
+id: "github-copilot-agents"
+slug: "/github-copilot/agents"
+locale: "ko"
+track: "github-copilot"
+level: "intermediate"
+title: "Cloud/Coding Agent와 IDE Agent Mode 구분하기"
+summary: "GitHub Copilot cloud agent, coding agent, VS Code agent mode, custom agents, prompt files, skills의 차이를 실행 환경, 산출물, 승인 방식, 협업 모델 관점에서 비교한다."
+investigationDate: "2026-06-22"
+updatedAt: "2026-06-22"
+sourceRefs:
+  - id: "github-cloud-agent"
+    title: "About GitHub Copilot cloud agent"
+    url: "https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-cloud-agent"
+    publisher: "GitHub Docs"
+  - id: "github-cloud-agent-start-sessions"
+    title: "Starting GitHub Copilot sessions"
+    url: "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/start-copilot-sessions"
+    publisher: "GitHub Docs"
+  - id: "github-cloud-agent-best-practices"
+    title: "Best practices for using GitHub Copilot to work on tasks"
+    url: "https://docs.github.com/copilot/how-tos/agents/copilot-coding-agent/best-practices-for-using-copilot-to-work-on-tasks"
+    publisher: "GitHub Docs"
+  - id: "github-cloud-agent-mcp"
+    title: "Model Context Protocol (MCP) and GitHub Copilot cloud agent"
+    url: "https://docs.github.com/enterprise-cloud@latest/copilot/concepts/agents/cloud-agent/mcp-and-cloud-agent"
+    publisher: "GitHub Enterprise Cloud Docs"
+  - id: "github-copilot-mcp"
+    title: "About Model Context Protocol (MCP)"
+    url: "https://docs.github.com/en/copilot/concepts/context/mcp"
+    publisher: "GitHub Docs"
+  - id: "vscode-cloud-agent"
+    title: "GitHub Copilot cloud agent"
+    url: "https://code.visualstudio.com/docs/agents/agent-types/cloud-agents"
+    publisher: "Visual Studio Code Docs"
+  - id: "vscode-chat-overview"
+    title: "Use chat in VS Code"
+    url: "https://code.visualstudio.com/docs/chat/chat-overview"
+    publisher: "Visual Studio Code Docs"
+  - id: "github-custom-cloud-agents"
+    title: "Creating custom agents for Copilot cloud agent"
+    url: "https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/create-custom-agents"
+    publisher: "GitHub Docs"
+  - id: "vscode-prompt-files"
+    title: "Use prompt files in VS Code"
+    url: "https://code.visualstudio.com/docs/agent-customization/prompt-files"
+    publisher: "Visual Studio Code Docs"
+  - id: "vscode-agent-skills"
+    title: "Use Agent Skills in VS Code"
+    url: "https://code.visualstudio.com/docs/agent-customization/agent-skills"
+    publisher: "Visual Studio Code Docs"
+---
+
+# Cloud/Coding Agent와 IDE Agent Mode 구분하기
+
+조사 기준일: 2026-06-22
+
+GitHub Docs는 Copilot cloud agent를 GitHub-hosted agent로 설명한다. 이 agent는 저장소를 조사하고, 계획을 만들고, branch에 변경을 만들고, GitHub Actions 기반의 임시 개발 환경에서 automated checks를 실행하고, 필요하면 pull request를 열 수 있다. 이 수업에서는 "cloud/coding agent"를 GitHub-hosted agent가 coding work를 맡는 workflow라는 의미로 사용한다.
+
+IDE agent mode는 다르다. 로컬 개발 환경에서 사용자와 상호작용하며 파일을 수정한다. Cloud agent는 GitHub 안에서 비동기로 작업한다. 핵심 질문은 "어느 쪽이 더 똑똑한가"가 아니라 "작업이 어디서 일어나고, 승인이 어디서 일어나며, 팀이 무엇을 리뷰하는가"다.
+
+## 한눈에 비교
+
+| 항목 | IDE agent mode | GitHub Copilot cloud/coding agent |
+|---|---|---|
+| 실행 위치 | 사용자의 로컬 IDE workspace와 terminal | GitHub Actions 기반의 원격 임시 개발 환경 |
+| 시작 방식 | Chat view, agent mode, local prompt, IDE workflow | GitHub issues, agents panel, Copilot Chat, VS Code 위임, GitHub CLI, API, integrations, automations |
+| 작업 방식 | 상호작용형 pair-programming loop | 백그라운드 조사, 계획, commit, session log, PR 생성 |
+| 주요 산출물 | 로컬 파일 변경, terminal output, reviewable diff | branch, commits, pull request, session log, review discussion |
+| 승인 지점 | 로컬 session에서 파일 수정, 명령 실행, tool use 전 | 위임 전 task scope와 repository configuration, 작업 후 PR review |
+| 강점 | 디버깅, 로컬 setup, visual inspection, 빠른 반복 | well-scoped backlog work, 병렬 처리, traceability, 비동기 협업 |
+| 주요 위험 | 로컬 명령과 파일 권한 | repository permissions, MCP configuration, content exposure, cost, PR quality, review discipline |
+
+간단히 말하면 IDE agent mode는 로컬 pair programmer에 가깝다. Cloud agent는 GitHub 안에서 일하고 ticket, review, governance를 통해 관리해야 하는 비동기 팀원에 가깝다.
+
+## Cloud agent가 적합한 작업
+
+Cloud agent는 목표가 명확하고, acceptance criteria가 테스트 가능하며, 하나의 repository 안에서 검증할 수 있는 작업에 가장 적합하다.
+
+좋은 후보:
+
+- 재현 방법이 있는 작은 bug fix
+- 영향받는 page가 명확한 documentation update
+- unit test 또는 integration test coverage 보강
+- 기존 pattern을 따르는 incremental feature work
+- 관찰 가능한 기준이 있는 accessibility fix
+- 좁은 module의 technical debt 정리
+- dependency update 이후 follow-up
+- 수정 범위가 국소적인 code scanning 또는 security campaign fix
+
+적합하지 않은 후보:
+
+- 대규모 architecture redesign
+- 모호한 product direction
+- production data나 secrets가 필요한 작업
+- 한 task 안에서 multi-repository coordination이 필요한 작업
+- 사람이 visual taste와 inspection을 해야 하는 design work
+- 안전하게 충분한 context를 줄 수 없는 sensitive business logic
+- bounded cloud session을 넘길 가능성이 큰 작업
+
+Cloud agent는 ownership을 없애지 않는다. 조사와 변경이 들어 있는 PR draft를 만들어 줄 뿐이다. 무엇을 merge할지는 여전히 human reviewers와 repository policy가 결정한다.
+
+## 시작 경로와 이슈 브리프
+
+GitHub Docs는 cloud agent session을 시작하는 여러 경로를 제시한다. GitHub issues, agents panel, Copilot Chat, failing GitHub Actions runs, IDEs, REST API, GitHub CLI, GitHub MCP Server, Jira, Slack, Microsoft Teams, Azure Boards, Linear, Raycast, mobile, automations가 포함된다. 일부 entry point는 PR을 자동으로 열고, 일부는 session log에서 이어서 PR을 만들 수 있다.
+
+가장 안전한 위임 단위는 이슈 브리프다. 좋은 ticket이면서 동시에 좋은 AI prompt처럼 읽히는 짧은 작업 설명이다.
+
+좋은 이슈 브리프 구조:
+
+- problem: 무엇이 깨졌거나 빠졌는가
+- scope: 포함되는 files, modules, behaviors
+- out of scope: 건드리지 말아야 할 files, contracts, migrations, workflows
+- acceptance criteria: reviewer가 올바른 결과를 판단하는 기준
+- verification: tests, lint, typecheck, manual review steps
+- constraints: performance, compatibility, accessibility, security, data handling rules
+- escalation: agent가 추측하지 말고 보고해야 하는 조건
+
+예시:
+
+```text
+Title: Remove duplicate checkout validation messages
+
+Problem:
+Users see the same validation message twice after submitting an empty checkout form.
+
+Scope:
+- Checkout form components
+- Checkout validation helpers
+- Existing checkout tests
+
+Out of scope:
+- Payment API contracts
+- Analytics event names
+- Database migrations
+- Global form library refactors
+
+Acceptance criteria:
+- Each invalid field renders one visible message.
+- Existing checkout tests pass.
+- Add a regression test for repeated submit.
+
+Verification:
+- Run the narrow checkout test command if available.
+- If the exact command is unclear, inspect package scripts and report the command used.
+
+Escalation:
+- If the fix requires API contract or analytics changes, stop and explain the dependency in the PR.
+```
+
+이슈 브리프는 문서 작업이 아니다. live chat session의 tool approval과 product intent를 GitHub workflow 안에 남기는 방식이다.
+
+## 정책과 보안 체크포인트
+
+Cloud agent의 승인은 CLI보다 앞단에서 일어난다. 모든 file read, command, MCP tool call 전에 사람이 prompt를 보는 구조가 아닐 수 있다. 그래서 repository, issue, custom agent, PR review 단계에서 guardrails가 필요하다.
+
+작업을 할당하기 전에 확인한다.
+
+- repository가 cloud agent 대상이고 organization policy가 활성화되어 있는가
+- repository owner가 해당 repository를 opt out하지 않았는가
+- branch protection과 rulesets가 Copilot의 PR 생성 또는 업데이트를 허용하는가, 또는 문서화된 bypass가 있는가
+- task가 one repository, one branch, one PR 범위인가
+- cloud session limit 안에 끝낼 수 있을 만큼 작은가, 필요하면 쪼갤 수 있는가
+- issue에 secrets, customer data, private operational logs가 포함되지 않았는가
+- 필요한 tests가 agent의 GitHub Actions 기반 환경에서 실행될 수 있는가
+- 필요한 setup steps, secrets, variables가 의도적으로 설정되어 있는가
+- Actions minutes와 AI credits 비용이 task에 적절한가
+- merge decision을 맡을 human reviewer가 정해져 있는가
+
+중요한 보안 메모: GitHub Docs는 cloud agent가 content exclusions를 반영하지 않는다고 설명한다. 관리자가 Copilot content exclusions를 설정했더라도 cloud agent가 해당 파일을 보지 못한다고 가정하면 안 된다. Sensitive paths는 이슈 브리프에서 out of scope로 명시하고 review, repository permissions, process controls로 강제해야 한다.
+
+## MCP와 cloud agent
+
+MCP와 cloud agent 조합은 interactive local session의 MCP보다 더 엄격하게 설계해야 한다. GitHub Docs는 MCP를 LLM application과 context를 공유하기 위한 open standard로 설명하고, cloud-agent MCP 문서는 MCP가 cloud agent를 tools와 services로 확장할 수 있다고 설명한다.
+
+운영상 중요한 차이:
+
+- Repository MCP settings는 Copilot cloud agent와 Copilot code review에 모두 적용된다.
+- Cloud agent와 code review는 현재 MCP resources나 prompts가 아니라 MCP tools를 사용한다.
+- OAuth를 사용하는 remote MCP servers는 해당 cloud-agent context에서 현재 지원되지 않는다.
+- Repository MCP tools가 설정되면 Copilot은 assigned task 중 available tools를 autonomously 사용할 수 있고, per-call approval을 요청하지 않는다.
+- 기본적으로 cloud agent는 write MCP server tools에 접근하지 않지만 일부 server는 write-capable tools를 포함할 수 있으므로, 팀은 available tools를 검토하고 `tools` field를 필요한 것만으로 제한해야 한다.
+
+MCP 검토표:
+
+| 질문 | 검토 동작 |
+|---|---|
+| server가 어떤 external system에 접근하는가 | data owner, environment, sensitivity를 확인한다. |
+| 어떤 tools가 노출되는가 | task와 관련 있는 tool만 configuration에 허용한다. |
+| 생성, 수정, comment, label, deploy, delete, state change가 가능한 tool이 있는가 | 문서화된 승인 경로가 없으면 제외한다. |
+| tool result가 session logs나 PR discussion에 들어갈 수 있는가 | secrets, customer records, private incident data를 피한다. |
+| custom agent에만 필요한 server인가, repository-level access가 너무 넓은가 | 필요하면 custom-agent MCP configuration을 선호한다. |
+
+정책 예시:
+
+```text
+For cloud-agent tasks in this repository:
+- GitHub MCP tools may be used for issues and pull requests in this repository.
+- Docs MCP tools may be used for read-only framework reference.
+- No MCP tool may create, update, delete, deploy, change ticket status, or post external comments.
+- Any task requiring write-capable MCP tools must be handled by a human or a separately approved custom agent.
+```
+
+## Custom agents, prompt files, skills
+
+Cloud agent는 specialized custom agents로 조정할 수 있다. Prompt files와 skills는 local workflow와 cloud workflow에서 반복 작업을 표준화한다.
+
+계층은 다음처럼 나눈다.
+
+| 계층 | Cloud workflow에서의 용도 |
+|---|---|
+| Repository custom instructions | 모든 agent work에 적용되는 baseline coding, testing, review rules |
+| Prompt file | 재사용 가능한 issue 또는 PR comment template |
+| Custom agent | 좁은 instructions, tools, escalation rules를 가진 specialized role |
+| Agent Skill | instructions, scripts, examples, references를 가진 specialized workflow |
+| MCP server | task 중 agent가 사용할 수 있는 external tools와 context |
+| Hook | agent execution 주변의 validation, logging, security scanning, workflow automation |
+
+Custom agent 예시:
+
+```text
+Name: docs-maintainer
+
+Role:
+Maintain product documentation for small behavior changes.
+
+Allowed work:
+- Edit docs/**
+- Update examples that refer to changed behavior
+- Add links to existing official references
+
+Forbidden work:
+- Edit application source
+- Change generated API docs
+- Touch release automation
+
+Verification:
+- Run docs lint if available
+- Report broken links or missing source material
+
+Escalation:
+- If code behavior is unclear, open a question in the PR instead of inventing behavior.
+```
+
+너무 범용적인 "senior developer" custom agent는 대개 넓다. 역할이 좁을수록 review criteria, tool scope, ownership을 강제하기 쉽다.
+
+## PR 리뷰 계약
+
+PR 리뷰 계약은 cloud-agent PR에 reviewer가 적용하는 합의다. Agent summary를 믿는 대신 evidence 중심으로 human review를 진행하게 한다.
+
+PR description에는 다음이 답변되어야 한다.
+
+- 어떤 이슈 브리프를 구현했는가
+- 어떤 files가 왜 변경되었는가
+- 무엇을 의도적으로 out of scope로 남겼는가
+- 어떤 tests, lint, typechecks를 실행했고 output은 무엇인가
+- 어떤 commands가 실패했고 Copilot은 어떻게 처리했는가
+- 어떤 MCP servers 또는 external tools가 사용 가능했는가
+- 어떤 resources에 접근할 수 없었는가
+- reviewer가 수동으로 볼 residual risk는 무엇인가
+
+Reviewer는 다음을 확인한다.
+
+- diff가 이슈 브리프 안에 머무는가
+- 새 tests가 acceptance criteria와 맞는가
+- sensitive paths, secrets, excluded content가 logs나 comments에 들어가지 않았는가
+- generated code가 local style과 architecture를 따른다
+- PR이 안전하게 리뷰할 만큼 작은가
+- required status checks와 code owner reviews가 통과한다
+- agent가 uncertainty를 confident summary로 숨기지 않았는가
+
+Cloud-agent PR은 compile된다는 이유만으로 merge하지 않는다. PR 리뷰 계약이 충족된 뒤에만 merge한다.
+
+## 롤백과 복구
+
+Cloud-agent 작업은 branch와 PR로 오기 때문에 롤백 계획이 중요하다. 가장 안전한 롤백은 많은 경우 "merge하지 않는 것"이다. PR이 아직 merge되지 않았다면 close하고 더 좁은 follow-up을 만들거나 human이 branch를 이어받는다. 이미 merge되어 regression을 만들었다면 repository의 일반 revert process를 사용하고, 실패한 가정을 담은 follow-up issue를 만든다.
+
+복구 패턴:
+
+- 범위가 나쁜 경우: PR을 닫고 더 작은 이슈 브리프를 만든다.
+- 아이디어는 좋지만 구현이 지저분한 경우: review comments가 구체적일 때만 Copilot follow-up commit을 요청하고, 아니면 human이 수정한다.
+- test setup 실패: 재할당 전에 setup documentation 또는 CI configuration을 보강한다.
+- 위험한 MCP behavior: 다음 task 전에 MCP server configuration을 비활성화하거나 좁힌다.
+- logs나 PR text에 sensitive information이 들어간 경우: 팀 incident process를 따르고 필요하면 credential을 rotate하며 session을 계속하지 않는다.
+- merge된 regression: PR을 revert하고 session link를 diagnosis용으로 보존하며 관찰된 failure를 포함한 새 이슈 브리프를 작성한다.
+
+Cloud agent는 parallel work에 유용하지만 롤백은 여전히 표준 engineering responsibility다.
+
+## 문제 해결
+
+| 증상 | 가능한 원인 | 회복 방법 |
+|---|---|---|
+| Copilot이 넓은 PR을 연다. | 이슈 브리프가 scope와 out-of-scope를 충분히 좁게 정의하지 않았다. | PR을 닫거나 수정하고 issue를 쪼개며 file/module boundaries를 추가한다. |
+| agent가 시작되지 않거나 PR을 업데이트하지 못한다. | organization policy, repository opt-out, branch protection, rulesets, permissions가 막고 있다. | 재할당 전에 cloud agent policy, repository settings, branch rules를 확인한다. |
+| 테스트가 cloud session에서만 실패한다. | 임시 환경에 setup steps, services, variables, fixtures가 없다. | setup을 repository에 문서화하거나 agent environment를 의도적으로 설정한다. |
+| agent가 sensitive files를 건드린다. | task에서 제외하지 않았거나 content exclusions가 적용된다고 가정했다. | review failure로 취급하고 scope를 좁히며 repository permissions 또는 process controls를 사용한다. |
+| MCP behavior가 예상과 다르다. | 너무 많은 tools가 노출되었거나 server가 팀 기대와 다르다. | `tools`를 제한하거나 server를 custom agent로 옮기거나 비활성화한다. |
+| PR summary가 confidence를 과장한다. | 가능한 경로 하나를 완료했지만 전체 검증은 부족하다. | PR description에 command output, failed checks, inaccessible resources, residual risk를 요구한다. |
+| task가 timeout된다. | 하나의 cloud session에 비해 issue가 너무 크다. | 더 작은 issues로 나누고 각 PR을 독립적으로 검증한다. |
+
+## 실습
+
+실습 1: vague request를 이슈 브리프로 바꾼다.
+
+```text
+Vague request:
+"Fix checkout validation."
+
+Rewrite as:
+- Problem
+- Scope
+- Out of scope
+- Acceptance criteria
+- Verification
+- Escalation rule
+```
+
+실습 2: PR 리뷰 계약 comment를 작성한다.
+
+```text
+Before review, please update the PR description with:
+- issue brief implemented
+- changed files and rationale
+- tests or checks run
+- failed checks and follow-up
+- MCP servers or external tools available
+- residual risk for human review
+```
+
+실습 3: MCP boundaries를 설계한다.
+
+```text
+For a docs-maintainer custom agent, list:
+- allowed read-only MCP tools
+- disallowed write-capable tools
+- data that must never appear in prompts or logs
+- when the agent should stop and ask for human help
+```
+
+실습 4: 롤백을 리허설한다.
+
+```text
+A cloud-agent PR merged and broke checkout validation in production.
+Write the rollback plan:
+- immediate revert or mitigation
+- evidence to preserve
+- follow-up issue brief
+- policy or test that would have caught it
+```
+
+## 체크리스트
+
+위임 전:
+
+- task가 명확하고 좁으며 테스트 가능한가
+- 이슈 브리프가 out-of-scope files와 behaviors를 식별하는가
+- one repository, one branch, one PR 안에서 끝낼 수 있는가
+- 필요한 setup steps가 cloud environment에서 가능한가
+- MCP servers와 tools가 task에 맞게 제한되어 있는가
+- sensitive files와 data가 희망이 아니라 policy로 제외되는가
+- human reviewer가 지정되어 있는가
+
+리뷰 중:
+
+- PR이 PR 리뷰 계약을 충족했는가
+- tests 또는 checks가 실행되었고 output이 보이는가
+- agent가 실패하거나 생략한 verification을 설명했는가
+- diff가 이슈 브리프와 일치하는가
+- MCP 또는 external-tool use가 새 위험을 만들었는가
+- merge 후 롤백이 단순한가
+
+완료 후:
+
+- 반복 feedback을 custom instructions, prompt file, skill, hook, custom agent로 승격해야 하는가
+- 빠진 test를 다음 이슈 브리프의 acceptance criterion으로 넣어야 하는가
+- repository policy 또는 MCP configuration gap이 드러났는가
+- cloud agent가 맞는 표면이었는가, 아니면 다음 task는 local IDE agent mode에 남겨야 하는가

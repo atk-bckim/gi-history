@@ -9,6 +9,9 @@ output/
 test-results/
 .playwright-cli/
 .playwright-mcp/
+artifacts/
+*-desktop-realism*.png
+semiconductor-package-*.png
 
 # typecheck cache
 *.tsbuildinfo

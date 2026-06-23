@@ -1,0 +1,304 @@
+---
+id: "github-copilot-review-security-admin"
+slug: "/github-copilot/review"
+locale: "en"
+track: "github-copilot"
+level: "intermediate"
+title: "Copilot Code Review, Security, Privacy, and Admin Policy"
+summary: "Use Copilot code review as a human-review aid, then govern it with custom instructions, automatic review, content exclusion, public code matching, and organization policies."
+investigationDate: "2026-06-22"
+updatedAt: "2026-06-22"
+sourceRefs:
+  - id: "github-copilot-code-review"
+    title: "Using GitHub Copilot code review"
+    url: "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/request-a-code-review/use-code-review"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-auto-review"
+    title: "Configuring automatic code review by GitHub Copilot"
+    url: "https://docs.github.com/en/copilot/how-tos/copilot-on-github/set-up-copilot/configure-automatic-review"
+    publisher: "GitHub Docs"
+  - id: "github-repository-instructions"
+    title: "Adding repository custom instructions for GitHub Copilot"
+    url: "https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions"
+    publisher: "GitHub Docs"
+  - id: "github-content-exclusion-concept"
+    title: "Content exclusion for GitHub Copilot"
+    url: "https://docs.github.com/en/copilot/concepts/context/content-exclusion"
+    publisher: "GitHub Docs"
+  - id: "github-content-exclusion-howto"
+    title: "Excluding content from GitHub Copilot"
+    url: "https://docs.github.com/en/copilot/how-tos/configure-content-exclusion/exclude-content-from-copilot"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-chat-responsible-use"
+    title: "Application card: GitHub Copilot Chat"
+    url: "https://docs.github.com/en/copilot/responsible-use/chat"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-agents-responsible-use"
+    title: "Application card: GitHub Copilot Agents"
+    url: "https://docs.github.com/en/copilot/responsible-use/agents"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-policies-org"
+    title: "Managing policies and features for GitHub Copilot in your organization"
+    url: "https://docs.github.com/copilot/managing-github-copilot-in-your-organization/managing-policies-and-features-for-copilot-in-your-organization"
+    publisher: "GitHub Docs"
+---
+
+# Copilot Code Review, Security, Privacy, and Admin Policy
+
+Investigation date: 2026-06-22
+
+Copilot code review is not a replacement approver for pull requests. GitHub responsible-use documentation calls out missed quality issues, false positives, inaccurate or unsafe suggestions, and security risks. A good team goal is not "AI reviews so humans do less"; it is "AI handles more repeatable review work so humans can focus judgment."
+
+## Where code review fits
+
+Copilot code review is useful for:
+
+- missing null and edge cases
+- missing tests
+- simple security anti-patterns
+- API misuse
+- mismatches between diff and PR description
+- repeated team-rule violations
+
+It is weaker for:
+
+- product intent and real user context
+- complex distributed-system impact
+- full security threat modeling
+- regulatory judgment
+- real production performance impact
+- taste-heavy UX decisions
+
+Place Copilot as pre-review or as an assistant beside human review.
+
+## Requesting a review
+
+A good review request gives purpose and risk:
+
+```text
+Review this pull request for correctness, security, and missing tests.
+
+Context:
+- This changes checkout validation only.
+- Payment API contracts must not change.
+- Existing analytics events must be preserved.
+
+Please focus on:
+- duplicate validation messages
+- unhandled async failures
+- missing regression tests
+- accidental exposure of payment fields
+```
+
+A weak request says only "review this." Copilot may see the diff, but it does not automatically know the team's priorities and forbidden changes.
+
+## Lock review standards with custom instructions
+
+GitHub Docs describe repository-wide instructions in `.github/copilot-instructions.md` and path-specific instructions through `NAME.instructions.md` files with `applyTo` frontmatter. Repository custom instructions can customize Copilot code review.
+
+Keep review instructions short and direct.
+
+```md
+# Copilot review instructions
+
+- Flag changes that alter public API contracts without migration notes.
+- Require regression tests for bug fixes.
+- Treat user-controlled HTML, SQL, shell commands, and file paths as untrusted input.
+- Do not request broad refactors unless they are necessary for the changed behavior.
+- Prefer findings with file path, risk, and concrete fix.
+```
+
+Path-specific example:
+
+```md
+---
+applyTo: "apps/web/**"
+---
+
+# Web app review rules
+
+- Check React Server Component boundaries.
+- Flag client components that import server-only modules.
+- Require accessible labels for new interactive controls.
+```
+
+Do not keep expanding instructions to fight every false positive. Repeated issues usually belong in tests, types, lint, or security scanners. CI is more reliable than telling an AI to "always be careful."
+
+## Automatic review rollout
+
+GitHub Docs provide settings for automatic Copilot code review on personal pull requests and organization repositories. Plan and license availability can vary, so verify the official settings before rollout.
+
+Automatic review fits when:
+
+- every PR should receive a baseline quality pass
+- obvious issues should be reduced before human review
+- junior developers benefit from educational feedback
+- a repository has many small PRs that need standardized pre-review
+
+An automatic review rollout should be gradual. Start with repositories where the team already has clear tests, short PRs, and active maintainers. In repository or organization rulesets, choose the target repositories and branches deliberately. Decide whether Copilot should review draft pull requests and whether it should review new pushes to an existing pull request; those settings change both feedback timing and comment volume.
+
+Rollout stages:
+
+1. Pilot on low-risk repositories and compare Copilot comments with human review findings.
+2. Define comment handling: which findings block merge, which become follow-up issues, and which can be resolved as false positives.
+3. Publish repository instructions before broad enablement so Copilot reviews against current team rules.
+4. Measure repeated findings, noisy categories, and missed issues for two to four review cycles.
+5. Expand only after humans still own approval, security judgment, and final merge decisions.
+
+Too many automatic comments create review fatigue. Define severity and dismissal rules so the team does not accumulate ignorable AI feedback.
+
+## Content exclusion
+
+Content exclusion configures Copilot to ignore specified files. GitHub Docs describe repository administrators, organization owners, and enterprise owners as able to configure content exclusion.
+
+Consider excluding:
+
+- `.env` files, credentials, private keys, token dumps
+- customer data samples
+- code restricted by license or contract
+- security exploit reproduction material
+- unreleased product strategy documents
+- third-party NDA material
+
+Understand the limits. Content exclusion is not a complete data loss prevention system across every Copilot surface and every indirect information path. As of 2026-06-22, GitHub Docs describe content exclusion as applying to Copilot code review, while noting support limitations in some editor edit/agent modes. The first control is still minimizing sensitive material in repositories and development environments.
+
+## Public code matching
+
+Copilot includes policy controls for suggestions that match or resemble public code. Organization or enterprise policy may override personal settings.
+
+Team defaults:
+
+- Organizations with high license risk should block matching public code suggestions.
+- If matching suggestions are allowed, define match-detail and license-review paths.
+- Treat Copilot-suggested code as subject to the same IP review as human-written code.
+- Avoid accepting large blocks verbatim; integrate small changes into existing abstractions.
+
+## Admin policy and data governance
+
+Managing Copilot is more than assigning seats. Organization administrators should review feature policies, model access, cloud agent usage, third-party coding agents, web search, content exclusion, code review automation, public code matching, and audit requirements together.
+
+Adoption sequence:
+
+1. Classify repositories and data: allowed, restricted, and prohibited for Copilot.
+2. Set defaults for public code matching, web search, cloud agent, and third-party agents.
+3. Train users on generated-code review, sensitive-data handling, and approval prompts.
+4. Define PR policy for agent-created labels, reviewers, and required checks.
+5. Publish `.github/copilot-instructions.md` and path-specific instructions.
+6. Review recurring issues, false positives, security incidents, and usage cost.
+
+## Governance policy matrix
+
+A policy matrix turns Copilot governance from a list of toggles into an operating model. GitHub organization policies can control feature and model availability for licensed users, while enterprise policies may limit what an organization owner can change. Repository rulesets, repository instructions, content exclusion, and public code matching policies should be recorded together because they affect the same developer workflow.
+
+| Governance question | Team decision | Operating artifact |
+| --- | --- | --- |
+| Which repositories can use Copilot code review? | Classify repositories as allowed, restricted, or prohibited based on data sensitivity and review maturity. | Repository inventory with owner and data class |
+| Which review mode is default? | Use manual requests for sensitive or experimental repositories; use automatic review for routine repositories with stable tests. | Branch or organization ruleset |
+| What context may Copilot use? | Exclude secrets, customer samples, restricted-license files, and unreleased strategy documents. | Content exclusion patterns and owner approval |
+| How are matching public code suggestions handled? | Block or review matches according to license risk and organization policy. | License review path and PR note |
+| What must remain human-owned? | Product intent, regulatory judgment, threat modeling, and final PR approval. | Pull request policy and reviewer checklist |
+
+The matrix should be short enough for a team lead to maintain. If a decision needs a paragraph of exceptions, move the detail into the exception register and keep the matrix readable.
+
+## Security triage runbook
+
+Copilot can flag security-looking issues, but a comment is not yet a confirmed vulnerability. A security triage runbook keeps the team from either panicking over false positives or dismissing real risks because the finding came from AI.
+
+Use this flow for Copilot security comments:
+
+1. Classify the finding: injection, authorization, secret exposure, unsafe parsing, external request risk, or another category.
+2. Identify affected assets: data type, service boundary, user role, and whether the code is reachable in production.
+3. Reproduce from the diff or a focused test without copying secrets or customer data into prompts.
+4. Decide severity with a human reviewer: block merge, fix before release, open a tracked issue, or mark false positive with evidence.
+5. Add a durable control when the issue is real: regression test, lint rule, security scanner rule, or clearer repository instruction.
+6. Provide product feedback on Copilot's comment when useful, but keep the team's security decision in the PR or issue tracker.
+
+For learners, the important habit is separating "Copilot noticed something" from "the organization has triaged and accepted a risk decision."
+
+## Exception register
+
+An exception register records approved departures from the default policy matrix. Without one, "temporary" AI governance decisions become oral history.
+
+Track these fields:
+
+- repository or team
+- policy being excepted
+- business reason
+- risk owner
+- compensating control
+- expiration date
+- next review date
+- link to PR, issue, or admin setting
+
+Example exceptions:
+
+| Exception | Acceptable only if |
+| --- | --- |
+| Automatic review disabled for a generated-code repository | Generated diffs create excessive noise and the repository has required human review plus scanner coverage. |
+| Content exclusion delayed for a legacy repository | Sensitive files are being moved or renamed, and owners have a dated plan to add patterns. |
+| Public code matching allowed for a narrow team | The team has license-review training and records match details in the PR. |
+
+Exceptions should expire. If an exception is renewed repeatedly, update the actual policy rather than pretending the default is still true.
+
+## Review evidence
+
+Review evidence is the record that a team can inspect later. It should not be a screenshot of Copilot saying a change looks good. Useful evidence shows the request, the AI feedback, the human decision, and the verification result.
+
+Capture:
+
+- the review request or automatic review trigger
+- Copilot comments that were accepted, fixed, rejected, or converted to issues
+- human reviewer decisions for security, privacy, licensing, and product intent
+- test, lint, scanner, or manual verification commands and their results
+- security triage notes for material findings
+- links to changed repository instructions, rulesets, or content exclusion settings when governance changed
+
+Good evidence makes future audits and retrospectives easier. It also teaches junior developers how experienced reviewers separate suggestion quality from merge readiness.
+
+## Admin operating rhythm
+
+Copilot governance needs a small admin operating rhythm. The rhythm should match release cadence and repository risk, but it should not depend on one champion remembering to check settings.
+
+| Cadence | Admin activity | Output |
+| --- | --- | --- |
+| Weekly | Review noisy Copilot comments, repeated findings, and unresolved AI review conversations. | Promote repeatable issues into tests, lint, or repository instructions. |
+| Monthly | Recheck the policy matrix, automatic review scope, content exclusion patterns, and exception register. | Updated decisions with owners and dates. |
+| Quarterly | Review organization policies for features, models, third-party agents, public code matching, and responsible-use training. | Governance notes and training updates. |
+| Incident-driven | Revisit settings after a secret exposure, unsafe suggestion, license concern, or agent permission issue. | Containment action and a durable control. |
+
+The goal is not heavier process. The goal is to make Copilot adoption observable enough that teams can improve it instead of debating anecdotes.
+
+## Security review prompts
+
+When asking Copilot for security review, constrain the category:
+
+```text
+Review this diff for security issues only.
+Focus on:
+- injection through SQL, shell, HTML, and file paths
+- authentication and authorization bypass
+- secret exposure in logs or client bundles
+- unsafe deserialization or parsing
+- SSRF, open redirect, and external request risks
+
+Do not comment on formatting unless it causes a security issue.
+```
+
+This reduces the noise caused by mixing style review with security findings.
+
+## Team checklist
+
+- Does Copilot review supplement, not replace, required human review?
+- Are repository instructions short and current?
+- Are automatic review scope and dismissal rules defined?
+- Are content exclusion targets and limitations documented?
+- Does public code matching policy match license risk?
+- Is there a policy matrix with owners and review dates?
+- Is the security triage runbook used for AI-raised security comments?
+- Does the automatic review rollout have pilot data before broad enablement?
+- Are exceptions recorded in an exception register with expiration dates?
+- Is review evidence available for important PRs and policy changes?
+- Is the admin operating rhythm scheduled and owned?
+- Are cloud, CLI, and IDE agent permission differences taught?
+- Are MCP servers and third-party agents reviewed for data access?
+- Are repeated review comments promoted into CI rules or tests?

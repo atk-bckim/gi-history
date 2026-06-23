@@ -1,0 +1,280 @@
+---
+id: "microsoft-copilot-governance"
+slug: "/microsoft-copilot"
+locale: "en"
+track: "microsoft-copilot"
+level: "intermediate"
+title: "Microsoft Copilot Accounts, Data, and Governance"
+summary: "Distinguish personal Microsoft Copilot, Microsoft 365 Copilot Chat, Microsoft 365 Copilot, and Copilot Studio agents through account boundaries, data access, Graph grounding, and enterprise data protection."
+investigationDate: "2026-06-22"
+updatedAt: "2026-06-22"
+sourceRefs:
+  - id: "m365-copilot-chat-faq"
+    title: "Frequently asked questions about Microsoft 365 Copilot Chat"
+    url: "https://learn.microsoft.com/en-us/copilot/faq"
+    publisher: "Microsoft Learn"
+  - id: "m365-copilot-edp"
+    title: "Enterprise data protection in Microsoft 365 Copilot and Microsoft 365 Copilot Chat"
+    url: "https://learn.microsoft.com/en-us/microsoft-365/copilot/enterprise-data-protection"
+    publisher: "Microsoft Learn"
+  - id: "m365-copilot-privacy"
+    title: "Data, Privacy, and Security for Microsoft 365 Copilot"
+    url: "https://learn.microsoft.com/en-us/microsoft-365/copilot/microsoft-365-copilot-privacy"
+    publisher: "Microsoft Learn"
+  - id: "m365-copilot-architecture"
+    title: "How does Microsoft 365 Copilot work?"
+    url: "https://learn.microsoft.com/en-us/microsoft-365/copilot/microsoft-365-copilot-architecture"
+    publisher: "Microsoft Learn"
+  - id: "m365-copilot-extensibility-prereqs"
+    title: "Set up your development environment for Microsoft 365 Copilot"
+    url: "https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/prerequisites"
+    publisher: "Microsoft Learn"
+  - id: "m365-copilot-connectors-overview"
+    title: "Microsoft 365 Copilot connectors overview"
+    url: "https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/overview-copilot-connector"
+    publisher: "Microsoft Learn"
+  - id: "purview-ai-m365-copilot"
+    title: "Use Microsoft Purview to manage data security and compliance for Microsoft 365 Copilot and Microsoft 365 Copilot Chat"
+    url: "https://learn.microsoft.com/en-us/purview/ai-m365-copilot"
+    publisher: "Microsoft Learn"
+  - id: "purview-audit-copilot"
+    title: "Audit logs for Copilot and AI applications"
+    url: "https://learn.microsoft.com/en-us/purview/audit-copilot"
+    publisher: "Microsoft Learn"
+  - id: "copilot-studio-knowledge-sources"
+    title: "Knowledge sources summary"
+    url: "https://learn.microsoft.com/en-us/microsoft-copilot-studio/knowledge-copilot-studio"
+    publisher: "Microsoft Learn"
+  - id: "teams-intelligent-recap"
+    title: "Intelligent recap for Teams calls and meetings"
+    url: "https://learn.microsoft.com/en-us/microsoftteams/intelligent-recap-calls-meetings"
+    publisher: "Microsoft Learn"
+  - id: "teams-copilot-meetings-admin"
+    title: "Manage Microsoft 365 Copilot in Teams meetings and events"
+    url: "https://learn.microsoft.com/en-us/microsoftteams/copilot-teams-transcription"
+    publisher: "Microsoft Learn"
+---
+
+# Microsoft Copilot Accounts, Data, and Governance
+
+Investigation date: 2026-06-22
+
+The first thing to teach about Microsoft Copilot is not the feature list. It is the account and data boundary. Personal Microsoft Copilot, Microsoft 365 Copilot Chat signed in with an Entra account, licensed Microsoft 365 Copilot, and Copilot Studio agents may all look like "Copilot", but their data access and protection conditions differ.
+
+## Product and account boundaries
+
+| Experience | Primary user | Sign-in | Default grounding | Governance focus |
+|---|---|---|---|---|
+| Microsoft Copilot | Personal users | Personal Microsoft account (MSA) | Mostly web | Check consumer terms and privacy settings. |
+| Microsoft 365 Copilot Chat | Work and education users | Microsoft Entra account | Web, user-uploaded files, limited agents | Enterprise data protection applies with Entra sign-in. |
+| Microsoft 365 Copilot | Licensed work users | Microsoft Entra account | Web plus Microsoft Graph work data | User permissions, sensitivity labels, Purview, audit, retention. |
+| Copilot Studio agents | Organization-built work agents | Depends on tenant settings | Instructions, web, SharePoint, Graph connectors, external data | Agent permissions, billing, terms/privacy, admin approval. |
+
+The training shorthand: personal Copilot is for personal use; Microsoft 365 Copilot Chat is Entra-account work chat; Microsoft 365 Copilot is the licensed experience that can reason over Microsoft Graph work data.
+
+## Microsoft Graph grounding
+
+Microsoft 365 Copilot can process a prompt and ground the response in tenant data from Microsoft Graph plus the user's working context. Microsoft Learn describes this as using organizational data such as documents, email, calendar, chats, meetings, and contacts within the user's permissions.
+
+The important statement is not "Copilot can see all company data." It is "data the user can view can become candidate grounding for Copilot." That makes permission hygiene the practical security task before prompt training.
+
+Check:
+
+- broad SharePoint and OneDrive sharing links
+- Teams channel and shared-channel permissions
+- external users and guest access
+- sensitivity labels and DLP policies
+- retention and deletion for old files
+- permissions on external data indexed by Graph connectors
+
+Copilot makes existing permissions more visible. A file that was overshared was already a search risk; Copilot can make it easier to rediscover and summarize.
+
+## Enterprise data protection
+
+Microsoft Learn describes enterprise data protection (EDP) as controls and commitments under Microsoft Product Terms and the Data Protection Addendum that apply to customer data for Microsoft 365 Copilot and Microsoft 365 Copilot Chat users. EDP is available to Microsoft 365 Copilot Chat users signed in with a Microsoft Entra account, and prompts and responses receive contractual protection similar to Microsoft 365 commercial offerings.
+
+Training points:
+
+- Microsoft documentation says prompts, responses, and data accessed through Microsoft Graph are not used to train foundation models.
+- Copilot follows existing user permissions and policies.
+- Prompts and responses may be available for audit, eDiscovery, and Microsoft Purview capabilities depending on subscription.
+- Web search queries can have different data handling practices from the Microsoft 365 service boundary.
+- When using agents, review the agent's privacy statement and terms of use.
+
+## Web search versus work data
+
+Microsoft 365 Copilot Chat provides web-grounded responses. Microsoft 365 Copilot can use both web and work data. Microsoft describes web queries as generated search queries sent to Bing search service to improve response quality, while also noting that web queries have separate data handling practices from Microsoft 365.
+
+Teach this distinction clearly. Users should not hear "EDP means I can type anything." They should hear: "Use the minimum necessary work information, confirm work-account protection, and understand the boundary for web grounding and agents."
+
+## Agents and Copilot Studio
+
+Microsoft 365 Copilot Chat users can access agents. The FAQ distinguishes agents grounded only in instructions or public websites from agents that access SharePoint or Graph connector content, which can require admin configuration and metered billing.
+
+Agent governance questions:
+
+- Which knowledge sources does this agent use?
+- Does it access SharePoint, Graph connectors, or external APIs?
+- Is it user-installed or admin-assigned?
+- What are its terms of use and privacy statement?
+- Are prompts and responses subject to audit or eDiscovery?
+- Does it incur metered consumption or Copilot Credits cost?
+- Does sensitive data move into an external system?
+
+An agent is work automation, so permissions and audit matter more than in ordinary chat.
+
+## Admin preparation sequence
+
+Before rollout:
+
+1. Define account boundaries between personal MSA use and Entra work-account use.
+2. Classify licensing: who gets Copilot Chat and who gets Microsoft 365 Copilot.
+3. Clean permissions in SharePoint, OneDrive, Teams, and external sharing.
+4. Check sensitivity labels, DLP, retention, eDiscovery, and audit.
+5. Train users on acceptable prompt data, citation review, and hallucination checks.
+6. Govern Copilot Studio, agent store access, Graph connectors, and external data.
+7. Review usage, feedback, audit signals, oversharing discoveries, and cost.
+
+## User principles
+
+Work users should remember five rules:
+
+1. Do not put work data into personal-account Copilot.
+2. Confirm that you are signed in with your work or school account.
+3. Copilot can answer from data you already have permission to see.
+4. Check citations and source documents before important decisions.
+5. Minimize sensitive data, and understand web search and agent boundaries.
+
+## Practice
+
+Compare the same question in three environments:
+
+1. Personal Microsoft Copilot: public-information question
+2. Microsoft 365 Copilot Chat: work-account web question plus uploaded file question
+3. Microsoft 365 Copilot: question grounded in permitted work documents, calendar, and mail context
+
+Compare:
+
+- Which account was used?
+- Which data grounded the response?
+- Were citations or sources provided?
+- Are prompt and response records subject to organizational audit?
+- Did the prompt include unnecessary sensitive data?
+
+## Workplace rollout artifacts
+
+Workplace education should leave behind operating artifacts, not only slide awareness. The artifacts below turn Microsoft Learn concepts into repeatable department rollout material while leaving licensing and feature availability checks to the tenant admin and current Microsoft documentation.
+
+### Department rollout playbook
+
+A department rollout playbook should be one page per team or business function.
+
+| Field | What to record |
+|---|---|
+| Department and owner | Business owner, IT owner, security/compliance reviewer, support contact. |
+| Approved scenarios | Three to five workflows, such as meeting recap, draft review, policy Q&A, sales prep, or project status synthesis. |
+| Approved Copilot surface | Personal Copilot forbidden for work data; Copilot Chat, Microsoft 365 Copilot, Teams meeting Copilot, or approved agent named explicitly. |
+| Data boundary | Which SharePoint sites, Teams channels, mailboxes, meetings, and connector data may ground answers. |
+| Risk control | Permission cleanup, sensitivity labels, DLP, retention, audit, and user verification steps. |
+| Training proof | Completion roster, prompt exercise results, citation-check samples, and feedback themes. |
+| Go/no-go signal | Permission review complete, support path ready, Purview evidence captured, and owner accepts residual risk. |
+
+Run the playbook first with a narrow cohort. Expand only after users can explain which account they are using, which data may ground the response, and how they verify citations before acting.
+
+### Meeting recap prompt
+
+Teams recap and Microsoft 365 Copilot in Teams can help users summarize discussion, decisions, and follow-up work when the admin policy and meeting settings allow the relevant Copilot experience. Teach a reusable meeting recap prompt, then require users to check the transcript, recording, chat, and linked files before sending the summary.
+
+```text
+meeting recap prompt:
+Summarize this meeting for workplace follow-up.
+
+Use only the meeting transcript, meeting chat, and linked files I can access.
+Return:
+1. decisions made
+2. action items with owner, due date, and dependency
+3. open questions
+4. risks or disagreements
+5. source citations or transcript moments for each important claim
+
+Flag anything that is unclear, missing, or based on incomplete transcript coverage.
+Do not invent owners, due dates, commitments, or policy conclusions.
+```
+
+The training exercise is simple: ask two users to run the same prompt, compare the action-item list against the meeting record, and correct anything that lacks a source.
+
+### Connector decision register
+
+Microsoft 365 Copilot connectors can bring external line-of-business data into Copilot experiences. Microsoft Learn distinguishes synced connectors that ingest and index external content into Microsoft Graph from federated connectors that retrieve data at query time through MCP without indexing that data into Microsoft Graph. A connector decision register prevents "connect the system" from becoming an uncontrolled data expansion.
+
+| Decision field | Review question |
+|---|---|
+| Source system | What business system or repository is being exposed? |
+| Connector model | Synced connector, federated connector, existing Graph connector, or no connector. |
+| Business purpose | Which department scenario requires this data? |
+| Permission source | Which identity, group, ACL, or entitlement system decides what each user can see? |
+| Data classification | Public, internal, confidential, regulated, or excluded. |
+| Retrieval scope | Which objects, fields, folders, or records are included and excluded? |
+| Citation behavior | Can users open the cited source and confirm the answer? |
+| Owner and review date | Who owns drift, schema changes, stale content, and retirement? |
+
+The register should include a default denial path: if permission mapping, classification, or citation behavior is unclear, the connector is not approved for rollout.
+
+### Purview evidence checklist
+
+Use a Purview evidence checklist before and after each rollout wave. The point is to prove that governance controls work in the tenant, not merely that they exist in a diagram.
+
+- Audit is enabled, and a sample Copilot interaction appears with user, time, app, and accessed resource details.
+- Prompts and responses can be found through the appropriate Purview audit, eDiscovery, or activity workflow for the organization's subscription and policy scope.
+- Sensitivity labels on source files appear in the review evidence when those files ground Copilot output.
+- Retention and deletion expectations for Copilot interaction history are documented for users and admins.
+- DLP and information protection policies are tested with at least one permitted and one blocked example.
+- Overshared SharePoint, OneDrive, Teams, and connector content discoveries are routed to owners.
+- The support team knows when to escalate to compliance, security, legal, or records management.
+
+Do not present this checklist as a universal license promise. Treat it as an evidence plan that the admin maps to the tenant's enabled Microsoft Purview capabilities.
+
+### Agent knowledge-source review
+
+Copilot Studio and Microsoft 365 declarative agents are governed through their instructions, actions, publication settings, and knowledge sources. Microsoft Learn documents knowledge sources such as public websites, uploaded documents, SharePoint, Dataverse, and enterprise data through connectors. Run an agent knowledge-source review before publication and after material source changes.
+
+| Review item | Approval question |
+|---|---|
+| Agent purpose | What work decision or workflow is the agent allowed to support? |
+| Knowledge sources | Which websites, files, SharePoint locations, Dataverse tables, or connectors ground answers? |
+| User authentication | Does the source only surface content the asking user can access? |
+| Web grounding | Is broad web search disabled, limited, or approved for this agent? |
+| Ungrounded answers | Can the agent answer from model knowledge alone, and is that acceptable? |
+| Source quality | Are documents current, authoritative, and free from hidden instructions or obsolete policy? |
+| Terms and privacy | Are terms of use, privacy statement, owner, and support path visible to admins and users? |
+| Test prompts | Do test questions prove correct refusal, correct citation, and no cross-boundary data exposure? |
+
+This review is the agent equivalent of permission cleanup for Microsoft Graph grounding. If the source is stale, overshared, or ambiguous, the agent will make that problem easier to repeat.
+
+## User and admin operating cadence
+
+Copilot governance needs a rhythm after launch.
+
+| Cadence | User education activity | Admin activity |
+|---|---|---|
+| Week 0 | Account boundary training and first department rollout playbook exercise. | Permission cleanup, connector register review, Teams meeting policy confirmation, and Purview evidence baseline. |
+| Weeks 1-4 | Weekly office hours using meeting recap prompt examples, citation checks, and safe prompt rewrites. | Review audit signals, oversharing reports, connector drift, support tickets, and blocked scenarios. |
+| Monthly | Department champions submit two useful prompts and one corrected Copilot mistake. | Review agent knowledge-source review records, connector decisions, policy changes, and adoption risks. |
+| Quarterly | Refresh training for new scenarios and repeat risky exercises. | Retest Purview evidence checklist, retire unused agents/connectors, and update the playbook for product changes. |
+
+The operating message for users is: choose the right account, use the minimum necessary data, verify sources, and report surprises. The operating message for admins is: keep permissions, connectors, agents, Purview evidence, and support ownership under active review.
+
+## Checklist
+
+- Did training distinguish personal Copilot from work Copilot Chat?
+- Did users learn when Entra sign-in and EDP apply?
+- Were permissions cleaned before Graph grounding rollout?
+- Was web query data handling explained separately?
+- Are agents' data access and costs admin-approved?
+- Are Purview, audit, eDiscovery, and retention policies reviewed?
+- Do users verify citations and source documents?
+- Is each department rollout playbook tied to real workflows, owners, and evidence?
+- Are meeting recap prompt exercises checked against transcripts, chats, and source files?
+- Does the connector decision register document permission mapping and review dates?
+- Is a Purview evidence checklist completed for each rollout wave?
+- Does every published agent have an agent knowledge-source review?

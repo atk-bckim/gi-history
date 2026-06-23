@@ -1,0 +1,377 @@
+---
+id: "github-copilot-agents"
+slug: "/github-copilot/agents"
+locale: "en"
+track: "github-copilot"
+level: "intermediate"
+title: "Cloud/Coding Agent vs IDE Agent Mode"
+summary: "Compare GitHub Copilot cloud agent, coding agent, VS Code agent mode, custom agents, prompt files, and skills by execution environment, output, approvals, and collaboration model."
+investigationDate: "2026-06-22"
+updatedAt: "2026-06-22"
+sourceRefs:
+  - id: "github-cloud-agent"
+    title: "About GitHub Copilot cloud agent"
+    url: "https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-cloud-agent"
+    publisher: "GitHub Docs"
+  - id: "github-cloud-agent-start-sessions"
+    title: "Starting GitHub Copilot sessions"
+    url: "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/start-copilot-sessions"
+    publisher: "GitHub Docs"
+  - id: "github-cloud-agent-best-practices"
+    title: "Best practices for using GitHub Copilot to work on tasks"
+    url: "https://docs.github.com/copilot/how-tos/agents/copilot-coding-agent/best-practices-for-using-copilot-to-work-on-tasks"
+    publisher: "GitHub Docs"
+  - id: "github-cloud-agent-mcp"
+    title: "Model Context Protocol (MCP) and GitHub Copilot cloud agent"
+    url: "https://docs.github.com/enterprise-cloud@latest/copilot/concepts/agents/cloud-agent/mcp-and-cloud-agent"
+    publisher: "GitHub Enterprise Cloud Docs"
+  - id: "github-copilot-mcp"
+    title: "About Model Context Protocol (MCP)"
+    url: "https://docs.github.com/en/copilot/concepts/context/mcp"
+    publisher: "GitHub Docs"
+  - id: "vscode-cloud-agent"
+    title: "GitHub Copilot cloud agent"
+    url: "https://code.visualstudio.com/docs/agents/agent-types/cloud-agents"
+    publisher: "Visual Studio Code Docs"
+  - id: "vscode-chat-overview"
+    title: "Use chat in VS Code"
+    url: "https://code.visualstudio.com/docs/chat/chat-overview"
+    publisher: "Visual Studio Code Docs"
+  - id: "github-custom-cloud-agents"
+    title: "Creating custom agents for Copilot cloud agent"
+    url: "https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/create-custom-agents"
+    publisher: "GitHub Docs"
+  - id: "vscode-prompt-files"
+    title: "Use prompt files in VS Code"
+    url: "https://code.visualstudio.com/docs/agent-customization/prompt-files"
+    publisher: "Visual Studio Code Docs"
+  - id: "vscode-agent-skills"
+    title: "Use Agent Skills in VS Code"
+    url: "https://code.visualstudio.com/docs/agent-customization/agent-skills"
+    publisher: "Visual Studio Code Docs"
+---
+
+# Cloud/Coding Agent vs IDE Agent Mode
+
+Investigation date: 2026-06-22
+
+GitHub Docs describe Copilot cloud agent as a GitHub-hosted agent that can research a repository, create a plan, make changes on a branch, run automated checks in an ephemeral GitHub Actions-powered development environment, and optionally open a pull request. This lesson uses "cloud/coding agent" to mean that GitHub-hosted agent workflow when it is assigned coding work.
+
+IDE agent mode is different. It makes changes in your local development environment with interactive user participation. Cloud agent works asynchronously inside GitHub. The core learning question is not "which one is smarter?" It is "where does work happen, where do approvals happen, and what artifact will the team review?"
+
+## Side-by-side comparison
+
+| Dimension | IDE agent mode | GitHub Copilot cloud/coding agent |
+|---|---|---|
+| Where it runs | The user's local IDE workspace and terminal | A remote ephemeral development environment powered by GitHub Actions |
+| How it starts | Chat view, agent mode, local prompt, or IDE workflow | GitHub issues, agents panel, Copilot Chat, VS Code delegation, GitHub CLI, API, integrations, or automations |
+| Work style | Interactive pair-programming loop | Background research, planning, commits, session logs, and PR creation |
+| Main output | Local file edits, terminal output, reviewable diff | Branch, commits, pull request, session log, and review discussion |
+| Approval point | Before file edits, command execution, and tool use in the local session | Before delegation through task scope and repository configuration; after work through PR review |
+| Strength | Debugging, local setup, visual inspection, quick iteration | Well-scoped backlog work, parallel execution, traceability, asynchronous collaboration |
+| Main risk | Local command and file permissions | Repository permissions, MCP configuration, content exposure, cost, PR quality, and review discipline |
+
+In plain terms: IDE agent mode behaves like a local pair programmer. Cloud agent behaves like an asynchronous teammate whose work must be ticketed, reviewed, and governed through GitHub.
+
+## When cloud agent fits
+
+Cloud agent works best when the goal is clear, the acceptance criteria are testable, and the work can be verified inside one repository.
+
+Good candidates:
+
+- small bug fixes with a known reproduction
+- documentation updates with clear affected pages
+- unit test or integration test coverage improvements
+- incremental feature work behind existing patterns
+- accessibility fixes with observable criteria
+- technical debt cleanup in a narrow module
+- follow-up work after dependency updates
+- selected code scanning or security campaign fixes when the fix is localized
+
+Poor candidates:
+
+- broad architecture redesign
+- ambiguous product direction
+- work that depends on production data or secrets
+- multi-repository coordination in one task
+- visual design work requiring human taste and inspection
+- sensitive business logic where the agent cannot be given enough context safely
+- tasks expected to exceed a bounded cloud session
+
+Cloud agent does not remove ownership. It creates a PR draft with useful research and changes. Human reviewers and repository policy still decide what merges.
+
+## Start paths and issue brief
+
+GitHub Docs list several ways to start a cloud agent session, including GitHub issues, the agents panel, Copilot Chat, failing GitHub Actions runs, IDEs, the REST API, GitHub CLI, the GitHub MCP Server, Jira, Slack, Microsoft Teams, Azure Boards, Linear, Raycast, mobile, and automations. Some entry points open a pull request automatically. Others let you continue from session logs and create a PR when ready.
+
+The safest delegation unit is an issue brief: a short task description written like a high-quality ticket and an AI prompt at the same time.
+
+Good issue brief structure:
+
+- problem: what is broken or missing
+- scope: files, modules, or behaviors that are in bounds
+- out of scope: files, contracts, migrations, or workflows not to touch
+- acceptance criteria: how reviewers know the result is correct
+- verification: tests, lint, typecheck, or manual review steps
+- constraints: performance, compatibility, accessibility, security, or data handling rules
+- escalation: what the agent should report instead of guessing
+
+Worked example:
+
+```text
+Title: Remove duplicate checkout validation messages
+
+Problem:
+Users see the same validation message twice after submitting an empty checkout form.
+
+Scope:
+- Checkout form components
+- Checkout validation helpers
+- Existing checkout tests
+
+Out of scope:
+- Payment API contracts
+- Analytics event names
+- Database migrations
+- Global form library refactors
+
+Acceptance criteria:
+- Each invalid field renders one visible message.
+- Existing checkout tests pass.
+- Add a regression test for repeated submit.
+
+Verification:
+- Run the narrow checkout test command if available.
+- If the exact command is unclear, inspect package scripts and report the command used.
+
+Escalation:
+- If the fix requires API contract or analytics changes, stop and explain the dependency in the PR.
+```
+
+An issue brief is not bureaucracy. It is how tool approval and product intent move from a live chat session into a durable GitHub workflow.
+
+## Policy and security checkpoints
+
+Cloud agent approvals happen earlier than CLI approvals. There may not be a human prompt before every file read, command, or MCP tool call. You therefore need guardrails at the repository, issue, custom agent, and PR-review levels.
+
+Before assigning work, check:
+
+- The repository is eligible for cloud agent and the organization policy enables it.
+- The repository owner has not opted the repository out.
+- Branch protection and rulesets will allow Copilot to create or update the PR, or the team has a documented bypass.
+- The task is one repository, one branch, and one PR in scope.
+- The task is small enough for the cloud session limit and can be split if needed.
+- The issue does not include secrets, customer data, or private operational logs.
+- Required tests can run in the agent's GitHub Actions-powered environment.
+- Any required setup steps, secrets, or variables are intentionally configured.
+- The cost of Actions minutes and AI credits is acceptable for the task.
+- Human reviewers know who owns the merge decision.
+
+Important security note: GitHub Docs state that cloud agent does not account for content exclusions. If administrators configured content exclusions for Copilot, do not assume those exclusions will hide files from cloud agent. Put sensitive paths out of scope in the issue brief and enforce them through review, repository permissions, and process.
+
+## MCP and cloud agent
+
+MCP and cloud agent require stricter planning than MCP in an interactive local session. GitHub Docs describe MCP as an open standard for sharing context with LLM applications, and the cloud-agent MCP documentation says MCP can extend cloud agent with tools and services.
+
+Key operational differences:
+
+- Repository MCP settings apply to both Copilot cloud agent and Copilot code review.
+- Cloud agent and code review currently use MCP tools, not MCP resources or prompts.
+- Remote MCP servers that use OAuth for authentication are not currently supported in that cloud-agent context.
+- Once repository MCP tools are configured, Copilot can use available tools autonomously during assigned tasks and will not ask for per-call approval.
+- By default, cloud agent does not have access to write MCP server tools, but some servers expose write-capable tools, so teams should review the available tools and restrict the configured `tools` field to only what is needed.
+
+MCP review table:
+
+| Question | Review action |
+|---|---|
+| What external system does the server reach? | Identify data owner, environment, and sensitivity. |
+| Which tools are exposed? | Allow only task-relevant tools in configuration. |
+| Can any tool write, comment, label, deploy, delete, or change state? | Exclude it unless there is a documented approval path. |
+| Will tool results enter session logs or PR discussion? | Avoid secrets, customer records, and private incident data. |
+| Does the custom agent need the server, or is repository-level access too broad? | Prefer narrower custom-agent MCP configuration when appropriate. |
+
+Example policy:
+
+```text
+For cloud-agent tasks in this repository:
+- GitHub MCP tools may be used for issues and pull requests in this repository.
+- Docs MCP tools may be used for read-only framework reference.
+- No MCP tool may create, update, delete, deploy, change ticket status, or post external comments.
+- Any task requiring write-capable MCP tools must be handled by a human or a separately approved custom agent.
+```
+
+## Custom agents, prompt files, and skills
+
+Cloud agent can be customized with specialized custom agents. Prompt files and skills help standardize recurring work across local and cloud workflows.
+
+Use the layers this way:
+
+| Layer | Best use in cloud workflow |
+|---|---|
+| Repository custom instructions | Baseline coding, testing, and review rules for all agent work |
+| Prompt file | Reusable issue or PR comment template |
+| Custom agent | Specialized role with narrower instructions, tools, and escalation rules |
+| Agent Skill | Specialized workflow with instructions, scripts, examples, and references |
+| MCP server | External tools and context the agent can use during a task |
+| Hook | Validation, logging, security scanning, or workflow automation around agent execution |
+
+Custom agent example:
+
+```text
+Name: docs-maintainer
+
+Role:
+Maintain product documentation for small behavior changes.
+
+Allowed work:
+- Edit docs/**
+- Update examples that refer to changed behavior
+- Add links to existing official references
+
+Forbidden work:
+- Edit application source
+- Change generated API docs
+- Touch release automation
+
+Verification:
+- Run docs lint if available
+- Report broken links or missing source material
+
+Escalation:
+- If code behavior is unclear, open a question in the PR instead of inventing behavior.
+```
+
+A generic "senior developer" custom agent is usually too broad. A narrow role makes review criteria, tool scope, and ownership easier to enforce.
+
+## PR review contract
+
+The PR review contract is the agreement reviewers apply to any cloud-agent PR. It keeps the human review focused on evidence instead of trusting the agent's summary.
+
+Require the PR description to answer:
+
+- What issue brief did this PR implement?
+- What files changed and why?
+- What was intentionally left out of scope?
+- What tests, lint, or typechecks ran, and what was the output?
+- Which commands failed, and what did Copilot do about them?
+- Which MCP servers or external tools were available?
+- Which resources were inaccessible?
+- What residual risk should reviewers inspect manually?
+
+Reviewers should then check:
+
+- The diff stays inside the issue brief.
+- New tests match the acceptance criteria.
+- No sensitive paths, secrets, or excluded content were introduced into logs or comments.
+- Generated code follows local style and architecture.
+- The PR is small enough to review safely.
+- Required status checks and code owner reviews still pass.
+- The agent did not hide uncertainty in a confident summary.
+
+Do not merge a cloud-agent PR just because it compiles. Merge it only after the PR review contract is satisfied.
+
+## Rollback and recovery
+
+Rollback planning matters because cloud-agent work arrives as a branch and PR. The safest rollback is often "do not merge." If the PR has not merged, close it, ask for a narrower follow-up, or have a human take over the branch. If it has merged and causes a regression, use the repository's normal revert process and file a follow-up issue with the failed assumption.
+
+Recovery patterns:
+
+- Bad scope: close the PR and create a smaller issue brief.
+- Good idea, messy implementation: ask Copilot for a follow-up commit only if the review comments are concrete; otherwise have a human revise.
+- Test setup failure: add missing setup documentation or CI configuration before reassigning.
+- Risky MCP behavior: disable or narrow the MCP server configuration before starting another task.
+- Sensitive information in logs or PR text: follow the team's incident process, rotate exposed credentials if needed, and do not continue the session.
+- Merged regression: revert the PR, preserve the session link for diagnosis, and write a new issue brief with the observed failure.
+
+Cloud agent is useful for parallel work, but rollback remains a standard engineering responsibility.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Recovery |
+|---|---|---|
+| Copilot opens a broad PR. | The issue brief did not define scope and out-of-scope areas tightly enough. | Close or revise the PR, split the issue, and add file/module boundaries. |
+| The agent cannot start or update a PR. | Organization policy, repository opt-out, branch protection, rulesets, or permissions block it. | Check cloud agent policy, repository settings, and branch rules before reassigning. |
+| Tests fail only in the cloud session. | The ephemeral environment lacks setup steps, services, variables, or fixtures. | Document setup in the repository or configure the agent environment intentionally. |
+| The agent touches sensitive files. | The task did not exclude them, or content exclusions were assumed to apply. | Treat as review failure, tighten scope, and use repository permissions or process controls. |
+| MCP behavior is surprising. | Too many tools were exposed or the server did not match team expectations. | Restrict `tools`, move the server to a custom agent, or disable it. |
+| The PR summary overstates confidence. | The agent completed a plausible path but lacked full verification. | Require command output, failed checks, inaccessible resources, and residual risk in the PR description. |
+| The task times out. | The issue is too large for one cloud session. | Split into smaller issues and verify each PR independently. |
+
+## Practice
+
+Practice 1: turn a vague request into an issue brief.
+
+```text
+Vague request:
+"Fix checkout validation."
+
+Rewrite as:
+- Problem
+- Scope
+- Out of scope
+- Acceptance criteria
+- Verification
+- Escalation rule
+```
+
+Practice 2: write a PR review contract comment.
+
+```text
+Before review, please update the PR description with:
+- issue brief implemented
+- changed files and rationale
+- tests or checks run
+- failed checks and follow-up
+- MCP servers or external tools available
+- residual risk for human review
+```
+
+Practice 3: design MCP boundaries.
+
+```text
+For a docs-maintainer custom agent, list:
+- allowed read-only MCP tools
+- disallowed write-capable tools
+- data that must never appear in prompts or logs
+- when the agent should stop and ask for human help
+```
+
+Practice 4: rehearse rollback.
+
+```text
+A cloud-agent PR merged and broke checkout validation in production.
+Write the rollback plan:
+- immediate revert or mitigation
+- evidence to preserve
+- follow-up issue brief
+- policy or test that would have caught it
+```
+
+## Checklist
+
+Before delegation:
+
+- Is the task clear, scoped, and testable?
+- Does the issue brief identify out-of-scope files and behaviors?
+- Can the work finish in one repository, one branch, and one PR?
+- Are required setup steps available to the cloud environment?
+- Are MCP servers and tools restricted to the task?
+- Are sensitive files and data excluded by policy, not just by hope?
+- Is a human reviewer assigned?
+
+During review:
+
+- Did the PR satisfy the PR review contract?
+- Did tests or checks run, and is the output visible?
+- Did the agent explain failed or skipped verification?
+- Does the diff match the issue brief?
+- Did any MCP or external-tool use create new risk?
+- Is rollback simple if this merges?
+
+After completion:
+
+- Should repeated feedback become custom instructions, a prompt file, a skill, a hook, or a custom agent?
+- Should a missing test become an acceptance criterion for future issue briefs?
+- Did this task reveal a repository policy or MCP configuration gap?
+- Was cloud agent the right surface, or should the next task stay in local IDE agent mode?

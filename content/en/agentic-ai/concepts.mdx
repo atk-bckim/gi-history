@@ -1,0 +1,364 @@
+---
+id: "agentic-ai-concepts"
+slug: "/agentic-ai"
+locale: "en"
+track: "agentic-ai"
+level: "advanced"
+title: "From Prompting to Agentic Workflows"
+summary: "Connect prompt engineering, context engineering, RAG, MCP, agents, agent skills, harness engineering, loop engineering, subagent-driven development, and deep research from a developer perspective."
+investigationDate: "2026-06-22"
+updatedAt: "2026-06-22"
+sourceRefs:
+  - id: "openai-prompt-engineering"
+    title: "Prompt engineering"
+    url: "https://developers.openai.com/api/docs/guides/prompt-engineering"
+    publisher: "OpenAI Developers"
+  - id: "openai-retrieval"
+    title: "Retrieval"
+    url: "https://developers.openai.com/api/docs/guides/retrieval"
+    publisher: "OpenAI Developers"
+  - id: "rag-paper"
+    title: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+    url: "https://arxiv.org/abs/2005.11401"
+    publisher: "arXiv"
+  - id: "mcp-spec"
+    title: "Model Context Protocol Specification 2025-06-18"
+    url: "https://modelcontextprotocol.io/specification/2025-06-18"
+    publisher: "Model Context Protocol"
+  - id: "openai-agents"
+    title: "Agents SDK"
+    url: "https://developers.openai.com/api/docs/guides/agents"
+    publisher: "OpenAI Developers"
+  - id: "openai-agent-orchestration"
+    title: "Orchestration and handoffs"
+    url: "https://developers.openai.com/api/docs/guides/agents/orchestration"
+    publisher: "OpenAI Developers"
+  - id: "openai-codex-subagents"
+    title: "Subagents"
+    url: "https://developers.openai.com/codex/subagents"
+    publisher: "OpenAI Developers"
+  - id: "openai-codex-skills"
+    title: "Agent Skills"
+    url: "https://developers.openai.com/codex/skills"
+    publisher: "OpenAI Developers"
+  - id: "openai-harness-engineering"
+    title: "Harness engineering: leveraging Codex in an agent-first world"
+    url: "https://openai.com/index/harness-engineering/"
+    publisher: "OpenAI"
+  - id: "openai-deep-research"
+    title: "Deep research"
+    url: "https://developers.openai.com/api/docs/guides/deep-research"
+    publisher: "OpenAI Developers"
+  - id: "vscode-subagents"
+    title: "Subagents in Visual Studio Code"
+    url: "https://code.visualstudio.com/docs/agents/subagents"
+    publisher: "Visual Studio Code Docs"
+---
+
+# From Prompting to Agentic Workflows
+
+Investigation date: 2026-06-22
+
+AI practice started with "how to write a good prompt", but it does not end there. For developers, the major shift is from getting one model answer to designing the context, tools, permissions, evaluations, and feedback loops in which models can work.
+
+This page connects the terms as one stack:
+
+```text
+Prompt
+-> Context
+-> Retrieval/RAG
+-> Tools/MCP
+-> Agent
+-> Skills
+-> Harness
+-> Loop
+-> Subagents
+-> Deep Research
+```
+
+## 1. Prompt engineering
+
+Prompt engineering is the practice of clearly expressing the goal, context, constraints, examples, and output format. OpenAI prompt engineering guidance explains that models can generate many kinds of output, from prose to code to structured JSON, and that how you structure the request affects quality.
+
+A practical prompt shape:
+
+```text
+Goal: what should be achieved
+Context: which code, documents, or user situation matters
+Constraints: what must be preserved or avoided
+Examples: good input/output examples
+Output: format, length, and priority
+Verification: how correctness should be checked
+```
+
+Prompt engineering remains important. In an agentic workflow, it becomes one part of a larger system.
+
+## 2. Context engineering
+
+Context engineering designs what the model should and should not see. Files, docs, search results, conversation history, tool descriptions, policies, memory, and test output can all become context.
+
+Good context engineering is selective, not maximal.
+
+- files directly relevant to the task
+- failure logs and test output
+- current architecture and forbidden patterns
+- source documents required for decisions
+- exclusion of stale or conflicting docs
+- removal of sensitive data and unnecessary chat history
+
+For developers, context engineering is AI onboarding. A new teammate does not need a thousand-page manual; they need the map, rules, and examples relevant to the current task.
+
+## 3. RAG
+
+RAG, retrieval-augmented generation, retrieves relevant information from an external knowledge source and adds it to the model context before generation. The 2020 RAG paper introduced the pattern of combining parametric memory inside a model with non-parametric memory from a retrievable knowledge source. OpenAI retrieval docs describe vector stores and semantic search for retrieving relevant information from your data.
+
+Use RAG when:
+
+- the answer depends on information newer than the model
+- internal product or organizational knowledge is required
+- provenance and citations matter
+- knowledge must be updated without retraining the model
+
+RAG quality depends on retrieval quality.
+
+- Are documents chunked appropriately?
+- Are metadata and permissions preserved?
+- Is query rewriting needed?
+- Are top-k results enough but not overwhelming?
+- Are sources linked to final claims?
+- Does the model avoid guessing when retrieval fails?
+
+## 4. MCP
+
+MCP, the Model Context Protocol, is an open protocol for connecting AI applications to external data and tools. The 2025-06-18 MCP specification defines hosts, clients, servers, and server features such as resources, prompts, and tools.
+
+RAG and MCP are related but different:
+
+| Concept | Core idea |
+|---|---|
+| RAG | Retrieve knowledge and add it to answer context. |
+| MCP resources | Expose external data and context through a standard interface. |
+| MCP prompts | Provide reusable prompts or workflows. |
+| MCP tools | Provide functions the model can call. |
+
+MCP's risk comes from its power. The specification discusses user consent, data privacy, tool safety, and sampling controls as trust principles. Tools can lead to arbitrary code execution or external system changes, so approvals and permission boundaries are essential.
+
+## 5. Agents
+
+OpenAI Agents SDK docs describe agents as applications that plan, call tools, collaborate across specialists, and maintain enough state to complete multi-step work.
+
+Compared with ordinary chat, an agent adds:
+
+- planning across steps
+- tools such as files, web, APIs, and terminal
+- loops that change action based on observations
+- guardrails and approvals
+- state and memory
+- orchestration through handoffs or agents-as-tools
+- evaluation and retry
+
+The reason to use an agent is not that the model is smart. Use an agent when the task is multi-step, intermediate observations affect the next action, and tool use plus verification matter.
+
+## 6. Agent skills
+
+An Agent Skill is a reusable package of instructions, references, scripts, and templates that helps an agent perform a specialized task. OpenAI Codex skill docs describe skills as directories with `SKILL.md` plus optional scripts, references, and assets. Codex loads full instructions only when the skill is relevant.
+
+Skills also manage context budget. Instead of putting every procedure into every prompt, expose a skill name and description, then load details on demand.
+
+Good skill candidates:
+
+- release procedures
+- security review methods
+- framework migrations
+- PDF, spreadsheet, or slide processing
+- internal API client generation
+- test or benchmark execution with report formatting
+
+## 7. Harness engineering
+
+Harness engineering designs the work environment that lets agents do reliable work. OpenAI's harness engineering article describes a shift where humans design environments, specify intent, and build feedback loops so Codex agents can execute reliably.
+
+A harness includes:
+
+- repo-local docs and architecture maps
+- entry instructions such as `AGENTS.md`
+- tests, lint, typecheck, and security scanners
+- observability: logs, metrics, traces
+- browser or app-control tools
+- approval gates and permission models
+- PR templates and review agents
+- CI output written so agents can understand and act on it
+
+The core idea is agent legibility. Knowledge the agent cannot access effectively does not exist. Slack decisions, human memory, and external docs need to become repo-local docs or executable checks.
+
+## 8. Loop engineering
+
+Loop engineering designs recurring AI work. As of 2026-06-22, this is more an emerging operational pattern than a single standardized term.
+
+A useful loop has:
+
+- trigger: what starts it
+- state: what carries forward
+- budget: time, cost, or tool-call limit
+- stop condition: when it should end
+- evaluation: how success is judged
+- escalation: when to ask a human
+- audit trail: what gets recorded
+
+Example:
+
+```text
+trigger: new pull request
+loop: test -> review -> fix -> rerun
+stop: tests pass and no P1 findings
+budget: 3 repair attempts
+escalation: same failure twice or migration needed
+record: PR comment with attempts and remaining risk
+```
+
+Without loop design, agents may keep trying when they should stop or declare completion when they should investigate.
+
+## 9. Subagent-driven development
+
+Subagent-driven development delegates narrow parts of a larger task to focused agents, then the main agent or human integrates the results. OpenAI Codex subagent docs describe spawning specialized agents in parallel and collecting their results for complex or highly parallel tasks. VS Code subagent docs describe scenarios such as research, code analysis, specialized review, and multi-model consensus.
+
+Good subagent use:
+
+- split security, performance, and accessibility review
+- independently research three architecture options
+- analyze impact by area in a large codebase
+- separate implementation context from review context
+
+Poor subagent use:
+
+- splitting a simple task and wasting tokens
+- giving every subagent the full repository and full chat history
+- collecting parallel outputs without an owner
+- merging conflicting recommendations without verification
+
+The main value is context isolation, not just parallelism.
+
+## 10. Deep research
+
+Deep research is an agentic research workflow that plans, searches, analyzes, and synthesizes source-based reports. OpenAI deep research API docs describe multi-step behavior such as clarification, prompt rewriting, and research execution.
+
+Deep research fits:
+
+- market or technical research requiring source comparison
+- fast-changing policy, product, or competitive information
+- topics requiring long documents and web sources together
+- decision support that needs citations
+
+It does not fit:
+
+- short fact checks with a known answer
+- high-stakes legal, medical, or financial decisions without expert review
+- internal data questions before connectors and data boundaries are ready
+- reports that nobody will verify against sources
+
+Treat deep research output as a verifiable research artifact, not final truth.
+
+## Operational training workflow
+
+The practical lesson is to turn these concepts into artifacts a team can run. The following names are training patterns, not universal standards, but they make agentic work inspectable.
+
+### Deep interview script
+
+Use a deep interview script before designing an agent, not after a demo is already persuasive. Interview the requester, a domain owner, a risk owner, and the person who will judge output quality.
+
+- What decision or action should the agent support?
+- Which data sources, tools, and accounts are allowed?
+- Which sources are forbidden or too stale to use?
+- What does a correct answer look like? What does a dangerous answer look like?
+- Which failures require immediate human escalation?
+- What evidence must the agent leave behind for review?
+
+The output is a one-page operating brief: goal, allowed context, allowed tools, approval gates, examples, evaluation rubric, stop condition, and escalation path.
+
+### Brainstorming funnel
+
+A brainstorming funnel keeps ideation from turning every problem into a fully autonomous agent. Start wide, then narrow.
+
+1. List candidate workflows: prompt-only, RAG-assisted, tool-assisted, agentic, and subagent-supported.
+2. Rank each option by user value, failure cost, data sensitivity, and verification difficulty.
+3. Choose the smallest workflow that can be tested with real examples.
+4. Defer any capability that lacks source access, permission boundaries, or an evaluation method.
+
+This makes brainstorming operational. Learners do not ask "Can an agent do it?" first. They ask "What is the smallest loop we can verify?"
+
+### Harness readiness scorecard
+
+Before an agent writes files, opens tickets, sends messages, or changes external systems, use a harness readiness scorecard. Score each item as 0 missing, 1 partial, or 2 reliable.
+
+| Area | Readiness question |
+|---|---|
+| Context | Are repo-local docs, architecture maps, and examples available? |
+| Verification | Are tests, lint, typecheck, or review checks runnable by the agent? |
+| Permissions | Are tools limited by account, environment, and approval policy? |
+| Observability | Can a reviewer see logs, commands, diffs, traces, or citations? |
+| Evaluation | Are good and bad examples available for judging output quality? |
+| Escalation | Does the agent know when to stop and ask a human? |
+| Rollback | Is there a safe way to undo or contain a bad action? |
+
+If any safety-critical row is 0, keep the workflow read-only or human-in-the-loop. A weak harness is not fixed by a stronger prompt.
+
+### Subagent delegation brief
+
+Subagent-driven development works best when delegation is narrow and auditable. Write a subagent delegation brief before spawning specialists.
+
+```text
+Role: security reviewer, performance analyst, docs researcher, or implementation scout
+Question: the one decision this subagent should answer
+Inputs: exact files, logs, docs, or sourceRefs to inspect
+Exclusions: files, systems, and assumptions to avoid
+Allowed tools: read-only, tests, web, terminal, browser, or none
+Output: findings, evidence, confidence, and open questions
+Acceptance: how the main agent will verify the result
+Owner: who integrates or rejects the recommendation
+```
+
+The main agent does not merge subagent output blindly. It checks evidence, resolves conflicts, and reruns the necessary verification.
+
+### Loop safeguards and the Ralph Wiggum Loop
+
+The Ralph Wiggum Loop is an informal training nickname for an agent loop that keeps repeating a shallow action because each observation is misread as progress. It is not a formal industry term; use it as a memorable failure mode.
+
+Guard against it with explicit loop controls:
+
+- set a maximum attempt count before the first action
+- require new evidence after every attempt
+- stop if the same failure appears twice
+- change the hypothesis before changing more code or content
+- require fresh verification before any completion claim
+- record what changed, what was observed, and what risk remains
+- escalate when the next step depends on missing authority, missing data, or unclear ownership
+
+The loop is useful only when it learns. If it repeats the same command, same edit, or same explanation without new evidence, stop the loop and return to the deep interview script or harness readiness scorecard.
+
+## Developer decision model
+
+Use this sequence:
+
+1. Is one answer enough? Use prompt engineering.
+2. Does quality depend on input information? Use context engineering.
+3. Do you need external knowledge retrieval? Use RAG.
+4. Do you need external actions? Use MCP tools.
+5. Do you need multi-step observation and revision? Use an agent.
+6. Do you need to reuse a procedure? Use an Agent Skill.
+7. Is the agent's work environment weak? Invest in harness engineering.
+8. Does work need to recur? Design a loop.
+9. Do independent research, review, or implementation streams help? Use subagents.
+10. Do you need long-running source-based research? Use deep research.
+
+## Checklist
+
+- Does the prompt include goal, constraints, output, and verification?
+- Is context sufficient but not excessive?
+- Do RAG results and citations meet quality standards?
+- Do MCP tools have approvals and permission boundaries?
+- Does the agent have stop conditions and failure reporting?
+- Do skills accurately encapsulate repeatable procedures?
+- Does the harness make tests, logs, docs, and policies legible to agents?
+- Does the loop include budget, stop condition, and escalation?
+- Do subagents provide real context isolation?
+- Was deep research output verified against source documents?

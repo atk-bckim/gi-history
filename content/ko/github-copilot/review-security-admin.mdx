@@ -1,0 +1,304 @@
+---
+id: "github-copilot-review-security-admin"
+slug: "/github-copilot/review"
+locale: "ko"
+track: "github-copilot"
+level: "intermediate"
+title: "Copilot 코드 리뷰, 보안, 개인정보, 관리자 정책"
+summary: "Copilot code review를 인간 리뷰 보조로 쓰는 방법과 custom instructions, 자동 리뷰, content exclusion, public code matching, 조직 정책을 함께 운영하는 기준을 정리한다."
+investigationDate: "2026-06-22"
+updatedAt: "2026-06-22"
+sourceRefs:
+  - id: "github-copilot-code-review"
+    title: "Using GitHub Copilot code review"
+    url: "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/request-a-code-review/use-code-review"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-auto-review"
+    title: "Configuring automatic code review by GitHub Copilot"
+    url: "https://docs.github.com/en/copilot/how-tos/copilot-on-github/set-up-copilot/configure-automatic-review"
+    publisher: "GitHub Docs"
+  - id: "github-repository-instructions"
+    title: "Adding repository custom instructions for GitHub Copilot"
+    url: "https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions"
+    publisher: "GitHub Docs"
+  - id: "github-content-exclusion-concept"
+    title: "Content exclusion for GitHub Copilot"
+    url: "https://docs.github.com/en/copilot/concepts/context/content-exclusion"
+    publisher: "GitHub Docs"
+  - id: "github-content-exclusion-howto"
+    title: "Excluding content from GitHub Copilot"
+    url: "https://docs.github.com/en/copilot/how-tos/configure-content-exclusion/exclude-content-from-copilot"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-chat-responsible-use"
+    title: "Application card: GitHub Copilot Chat"
+    url: "https://docs.github.com/en/copilot/responsible-use/chat"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-agents-responsible-use"
+    title: "Application card: GitHub Copilot Agents"
+    url: "https://docs.github.com/en/copilot/responsible-use/agents"
+    publisher: "GitHub Docs"
+  - id: "github-copilot-policies-org"
+    title: "Managing policies and features for GitHub Copilot in your organization"
+    url: "https://docs.github.com/copilot/managing-github-copilot-in-your-organization/managing-policies-and-features-for-copilot-in-your-organization"
+    publisher: "GitHub Docs"
+---
+
+# Copilot 코드 리뷰, 보안, 개인정보, 관리자 정책
+
+조사 기준일: 2026-06-22
+
+Copilot code review는 PR 리뷰를 대체하는 승인자가 아니다. GitHub responsible-use 문서는 Copilot이 놓칠 수 있는 코드 품질 문제, false positive, 부정확하거나 안전하지 않은 제안, 보안 위험을 명시한다. 따라서 팀의 목표는 "AI가 리뷰해 주니 사람 리뷰를 줄인다"가 아니라 "반복적이고 기계적인 리뷰 품질을 높이고 사람이 판단해야 할 지점을 더 선명하게 만든다"여야 한다.
+
+## Code review의 위치
+
+Copilot code review는 다음 영역에 강하다.
+
+- 누락된 null/edge case
+- 테스트 누락
+- 단순 보안 취약 패턴
+- API 사용 실수
+- 변경 범위와 PR 설명의 불일치
+- 반복되는 팀 규칙 위반
+
+약한 영역도 분명하다.
+
+- 제품 의도와 실제 사용자 맥락
+- 복잡한 분산 시스템 영향
+- 보안 위협 모델 전체
+- 조직별 규제 판단
+- 성능 병목의 실제 운영 영향
+- "이 UX가 좋은가" 같은 취향과 판단
+
+따라서 Copilot 리뷰는 사람 리뷰 앞의 pre-review 또는 사람 리뷰 옆의 보조 리뷰로 배치한다.
+
+## 리뷰 요청 방식
+
+좋은 리뷰 요청은 변경 목적과 위험을 알려 준다.
+
+```text
+Review this pull request for correctness, security, and missing tests.
+
+Context:
+- This changes checkout validation only.
+- Payment API contracts must not change.
+- Existing analytics events must be preserved.
+
+Please focus on:
+- duplicate validation messages
+- unhandled async failures
+- missing regression tests
+- accidental exposure of payment fields
+```
+
+나쁜 요청은 "리뷰해줘"로 끝난다. Copilot은 코드 diff를 볼 수 있어도 팀의 우선순위와 금지 사항은 자동으로 알지 못한다.
+
+## Custom instructions로 리뷰 기준 고정
+
+GitHub Docs는 repository-wide instructions를 `.github/copilot-instructions.md`에 두고, path-specific instructions는 `NAME.instructions.md`와 `applyTo` frontmatter로 지정하는 방식을 설명한다. Copilot code review에도 repository custom instructions를 적용할 수 있다.
+
+리뷰 지침은 짧고 직접적이어야 한다.
+
+```md
+# Copilot review instructions
+
+- Flag changes that alter public API contracts without migration notes.
+- Require regression tests for bug fixes.
+- Treat user-controlled HTML, SQL, shell commands, and file paths as untrusted input.
+- Do not request broad refactors unless they are necessary for the changed behavior.
+- Prefer findings with file path, risk, and concrete fix.
+```
+
+Path-specific example:
+
+```md
+---
+applyTo: "apps/web/**"
+---
+
+# Web app review rules
+
+- Check React Server Component boundaries.
+- Flag client components that import server-only modules.
+- Require accessible labels for new interactive controls.
+```
+
+반복되는 Copilot 오탐은 지침을 계속 늘리는 대신 테스트, 타입, lint, security scanner로 옮기는 것이 낫다. AI에게 "항상 조심하라"고 쓰는 것보다 CI가 실패하게 만드는 편이 안정적이다.
+
+## Automatic review rollout
+
+GitHub Docs는 개인 PR과 조직 repository에 대해 automatic Copilot code review 설정을 제공한다. 계획과 라이선스 조건은 조직마다 다를 수 있으므로 배포 전 공식 설정 화면에서 확인해야 한다.
+
+자동 리뷰는 다음 상황에 적합하다.
+
+- 모든 PR에 기본 품질 체크를 붙이고 싶을 때
+- human reviewer가 보기 전에 obvious issue를 줄이고 싶을 때
+- 초보 개발자에게 교육적 피드백을 제공하고 싶을 때
+- 작은 PR이 많은 저장소에서 pre-review를 표준화하고 싶을 때
+
+automatic review rollout은 한 번에 전체 조직에 켜는 작업이 아니다. 테스트가 안정적이고 PR이 작으며 maintainer가 활발한 저장소에서 먼저 시작한다. Repository ruleset이나 organization ruleset에서 대상 repository와 branch를 의도적으로 고르고, draft pull request도 리뷰할지, 기존 PR의 새 push도 다시 리뷰할지 정한다. 이 선택은 피드백 시점과 코멘트 양을 크게 바꾼다.
+
+Rollout 단계:
+
+1. 낮은 위험의 저장소에서 pilot을 하고 Copilot 코멘트와 human review finding을 비교한다.
+2. 코멘트 처리 기준을 정한다. 어떤 finding은 merge block인지, 어떤 것은 follow-up issue인지, 어떤 것은 근거를 남기고 false positive로 닫을지 결정한다.
+3. 넓게 켜기 전에 repository instructions를 배포해서 Copilot이 현재 팀 규칙을 기준으로 리뷰하게 한다.
+4. 두세 번의 review cycle 동안 반복 finding, noisy category, 놓친 issue를 측정한다.
+5. human reviewer가 승인, 보안 판단, 최종 merge 결정을 계속 소유한다는 조건에서만 확대한다.
+
+하지만 자동 리뷰 코멘트가 많아지면 사람 리뷰가 무뎌진다. 팀은 "무시해도 되는 AI 코멘트"가 쌓이지 않도록 severity 기준과 dismissal 기준을 정해야 한다.
+
+## Content exclusion
+
+Content exclusion은 Copilot이 특정 파일을 무시하도록 설정하는 관리 기능이다. GitHub Docs는 repository administrator, organization owner, enterprise owner가 content exclusion을 구성할 수 있다고 설명한다.
+
+제외 대상으로 고려할 항목:
+
+- `.env`, credential, private key, token dump
+- 고객 데이터 샘플
+- 라이선스상 외부 전송이 제한된 코드
+- 보안 취약점 재현 자료
+- 아직 공개하면 안 되는 제품 전략 문서
+- 제3자 NDA 자료
+
+중요한 한계도 있다. Content exclusion은 모든 Copilot 표면과 모든 간접 정보 흐름을 완벽히 차단하는 데이터 유출 방지 시스템이 아니다. 2026-06-22 기준 GitHub Docs는 content exclusion이 Copilot code review에도 적용되지만, editor의 일부 edit/agent mode에는 지원 한계가 있음을 설명한다. 민감 정보는 애초에 저장소와 개발 환경에 최소한으로 두는 원칙이 먼저다.
+
+## Public code matching
+
+Copilot에는 public code와 일치하거나 유사한 제안을 차단하거나 표시하는 정책이 있다. 개인 설정과 조직/엔터프라이즈 정책이 충돌하면 조직 정책이 우선할 수 있다.
+
+팀 기준:
+
+- 라이선스 리스크가 높은 조직은 matching public code 제안을 차단한다.
+- 허용하는 경우에도 match details와 라이선스 검토 경로를 둔다.
+- Copilot이 제안한 코드도 사람이 작성한 코드와 같은 IP 검토 대상이다.
+- 큰 코드 블록을 그대로 받아들이지 말고 기존 추상화에 맞게 작게 통합한다.
+
+## 관리자 정책과 데이터 거버넌스
+
+GitHub Copilot 관리는 seat assignment만으로 끝나지 않는다. 조직 관리자는 기능별 정책, 모델 접근, cloud agent 사용, third-party coding agents, web search, content exclusion, code review 자동화, public code matching, audit 요구사항을 함께 봐야 한다.
+
+도입 순서:
+
+1. 파일과 데이터 분류: 어떤 저장소가 Copilot 사용 가능/제한/금지인지 정한다.
+2. 정책 기본값: public code matching, web search, cloud agent, third-party agents의 기본값을 정한다.
+3. 사용자 교육: "생성 코드 검토", "민감 정보 금지", "승인 프롬프트 검토"를 훈련한다.
+4. PR 정책: agent-generated PR 라벨, reviewer, required checks를 정한다.
+5. 지침 배포: `.github/copilot-instructions.md`와 path-specific instructions를 만든다.
+6. 모니터링: 반복 이슈, 오탐, 보안 사고, usage cost를 주기적으로 리뷰한다.
+
+## 거버넌스 정책 매트릭스
+
+정책 매트릭스는 Copilot 거버넌스를 토글 목록이 아니라 운영 모델로 바꾼다. GitHub의 organization policy는 라이선스를 받은 사용자에게 어떤 기능과 모델을 사용할 수 있게 할지 제어할 수 있고, enterprise policy가 있으면 organization owner가 바꿀 수 있는 범위가 제한될 수 있다. Repository ruleset, repository instructions, content exclusion, public code matching 정책은 모두 같은 개발자 workflow에 영향을 주므로 함께 기록해야 한다.
+
+| 거버넌스 질문 | 팀 결정 | 운영 산출물 |
+| --- | --- | --- |
+| 어떤 repository에서 Copilot code review를 쓸 수 있는가 | 데이터 민감도와 review 성숙도에 따라 allowed, restricted, prohibited로 분류한다. | owner와 data class가 있는 repository inventory |
+| 기본 review mode는 무엇인가 | 민감하거나 실험적인 저장소는 manual request, 안정적인 테스트가 있는 일반 저장소는 automatic review를 쓴다. | Branch 또는 organization ruleset |
+| Copilot이 어떤 context를 볼 수 있는가 | secret, 고객 샘플, 제한 라이선스 파일, 미공개 전략 문서를 제외한다. | Content exclusion pattern과 owner approval |
+| Public code와 유사한 제안은 어떻게 처리하는가 | 라이선스 위험과 조직 정책에 따라 차단하거나 검토 경로를 둔다. | License review path와 PR note |
+| 무엇은 반드시 사람이 소유하는가 | 제품 의도, 규제 판단, threat modeling, 최종 PR approval은 사람이 맡는다. | Pull request policy와 reviewer checklist |
+
+이 매트릭스는 team lead가 실제로 유지할 수 있을 만큼 짧아야 한다. 예외 설명이 길어지면 본문에 억지로 넣지 말고 예외 등록부로 옮긴다.
+
+## 보안 triage runbook
+
+Copilot은 보안처럼 보이는 issue를 발견할 수 있지만, 코멘트 하나가 곧 확인된 취약점은 아니다. 보안 triage runbook은 팀이 false positive에 과잉 반응하거나, AI가 찾은 것이라는 이유로 실제 위험을 무시하는 일을 줄인다.
+
+Copilot 보안 코멘트에는 이 흐름을 적용한다.
+
+1. Finding을 분류한다: injection, authorization, secret exposure, unsafe parsing, external request risk, 또는 다른 범주.
+2. 영향 자산을 확인한다: data type, service boundary, user role, production reachability.
+3. secret이나 고객 데이터를 prompt에 복사하지 않고 diff나 focused test로 재현한다.
+4. human reviewer와 severity를 결정한다: merge block, release 전 수정, tracked issue 생성, 또는 근거를 남긴 false positive.
+5. 실제 issue라면 durable control을 추가한다: regression test, lint rule, security scanner rule, 더 명확한 repository instruction.
+6. 필요하면 Copilot 코멘트에 product feedback을 남기되, 팀의 보안 판단은 PR이나 issue tracker에 보존한다.
+
+학습자에게 중요한 습관은 "Copilot이 무언가를 발견했다"와 "조직이 위험을 triage하고 수용 또는 차단 결정을 했다"를 분리하는 것이다.
+
+## 예외 등록부
+
+예외 등록부는 기본 정책 매트릭스에서 벗어나는 승인된 결정을 기록한다. 이 장부가 없으면 "잠깐만 예외"였던 AI 거버넌스 결정이 구두 기억으로 남는다.
+
+기록할 필드:
+
+- repository 또는 team
+- 예외를 둔 policy
+- business reason
+- risk owner
+- compensating control
+- expiration date
+- next review date
+- PR, issue, 또는 admin setting 링크
+
+예시:
+
+| 예외 | 허용 조건 |
+| --- | --- |
+| Generated-code repository에서 automatic review를 끈다 | 생성된 diff가 과도한 noise를 만들고, required human review와 scanner coverage가 있다. |
+| Legacy repository의 content exclusion을 늦춘다 | 민감 파일을 이동하거나 이름을 바꾸는 중이며, owner가 날짜가 있는 pattern 추가 계획을 갖고 있다. |
+| 좁은 범위의 팀에 public code matching을 허용한다 | 팀이 license-review 교육을 받았고 match details를 PR에 남긴다. |
+
+예외에는 만료일이 있어야 한다. 같은 예외를 계속 갱신한다면 기본 정책을 실제 운영에 맞게 바꾸는 편이 낫다.
+
+## 리뷰 증거
+
+리뷰 증거는 나중에 팀이 다시 확인할 수 있는 기록이다. Copilot이 "괜찮아 보인다"고 말한 화면 캡처가 증거가 되어서는 안 된다. 좋은 증거는 요청, AI feedback, human decision, verification result를 함께 보여 준다.
+
+남길 항목:
+
+- review request 또는 automatic review trigger
+- accepted, fixed, rejected, issue로 전환된 Copilot comment
+- 보안, 개인정보, 라이선스, 제품 의도에 대한 human reviewer decision
+- test, lint, scanner, manual verification command와 결과
+- 중요한 finding에 대한 security triage note
+- governance가 바뀐 경우 repository instructions, ruleset, content exclusion setting 링크
+
+좋은 증거는 audit와 retrospective를 쉽게 만든다. 또한 junior developer가 suggestion quality와 merge readiness를 어떻게 구분하는지 배울 수 있게 한다.
+
+## 관리자 운영 리듬
+
+Copilot 거버넌스에는 작은 관리자 운영 리듬이 필요하다. 리듬은 release cadence와 repository risk에 맞춰야 하지만, 한 명의 champion이 기억할 때만 작동해서는 안 된다.
+
+| 주기 | 관리자 활동 | 산출물 |
+| --- | --- | --- |
+| 매주 | noisy Copilot comment, 반복 finding, unresolved AI review conversation을 본다. | 반복 가능한 issue를 test, lint, repository instruction으로 승격한다. |
+| 매월 | 정책 매트릭스, automatic review scope, content exclusion pattern, 예외 등록부를 다시 확인한다. | owner와 날짜가 있는 업데이트된 결정 |
+| 분기마다 | 기능, 모델, third-party agent, public code matching, responsible-use training 관련 organization policy를 검토한다. | Governance note와 training update |
+| incident 발생 시 | secret exposure, unsafe suggestion, license concern, agent permission issue 이후 설정을 재검토한다. | Containment action과 durable control |
+
+목표는 절차를 무겁게 만드는 것이 아니다. Copilot 도입을 관찰 가능하게 만들어 팀이 anecdote가 아니라 근거로 개선하게 만드는 것이다.
+
+## 보안 리뷰 관점
+
+Copilot에게 보안 리뷰를 맡길 때는 범주를 명확히 한다.
+
+```text
+Review this diff for security issues only.
+Focus on:
+- injection through SQL, shell, HTML, and file paths
+- authentication and authorization bypass
+- secret exposure in logs or client bundles
+- unsafe deserialization or parsing
+- SSRF, open redirect, and external request risks
+
+Do not comment on formatting unless it causes a security issue.
+```
+
+이렇게 하면 Copilot이 일반 코드 스타일과 보안 이슈를 섞어 noise를 늘리는 문제를 줄일 수 있다.
+
+## 팀 체크리스트
+
+- Copilot review는 필수 human review를 대체하지 않는가
+- repository instructions가 짧고 최신인가
+- automatic review의 적용 범위와 dismissal 기준이 정해졌는가
+- content exclusion 대상 파일과 한계를 문서화했는가
+- public code matching 정책이 라이선스 위험과 맞는가
+- owner와 review date가 있는 정책 매트릭스가 있는가
+- AI가 제기한 보안 코멘트에 보안 triage runbook을 적용하는가
+- automatic review rollout은 broad enablement 전에 pilot data를 갖는가
+- 예외 등록부에 만료일이 있는 예외만 남아 있는가
+- 중요한 PR과 policy change에 대한 리뷰 증거가 남는가
+- 관리자 운영 리듬이 일정과 owner를 갖고 있는가
+- cloud/CLI/IDE agent의 권한 차이를 교육했는가
+- MCP 서버와 third-party agent의 데이터 접근을 검토했는가
+- 반복 리뷰 코멘트가 CI 규칙이나 테스트로 승격되고 있는가
