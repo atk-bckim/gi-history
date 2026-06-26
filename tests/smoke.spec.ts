@@ -146,10 +146,10 @@ test("English showcase page renders the showcase landing surface", async ({
     }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "3D Digital Twin Command Center" }),
+    page.getByRole("heading", { name: "3D Semiconductor Test Line Twin" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: /Open Digital Twin/ }),
+    page.getByRole("link", { name: /Open Test Line/ }),
   ).toBeVisible();
 
   watcher.assertNoFailures();
@@ -162,9 +162,9 @@ test.describe("digital twin", () => {
     const watcher = await gotoAndCheck(page, "/en/showcase/digital-twin");
 
     await expect(
-      page.getByRole("heading", { name: "3D Digital Twin Command Center" }),
+      page.getByRole("heading", { name: "3D Semiconductor Test Line Twin" }),
     ).toBeVisible();
-    await expect(page.getByText("Semiconductor Fab - Line 7")).toBeVisible();
+    await expect(page.getByText("OSAT Test Floor - Line T7")).toBeVisible();
     await expect(page.getByText("AI COPILOT ANALYSIS")).toBeVisible();
 
     const canvas = page.locator("canvas").first();
@@ -184,19 +184,53 @@ test.describe("digital twin", () => {
     watcher.assertNoFailures();
   });
 
+  test("desktop lets pointer events reach the 3D canvas for mouse controls", async ({
+    page,
+  }) => {
+    const watcher = await gotoAndCheck(page, "/en/showcase/digital-twin");
+
+    const canvas = page.locator("canvas").first();
+    await expect(canvas).toBeVisible();
+
+    const box = await canvas.boundingBox();
+    expect(box).not.toBeNull();
+
+    const hitTarget = await page.evaluate(
+      ({ x, y }) => {
+        const element = document.elementFromPoint(x, y);
+
+        return {
+          tagName: element?.tagName ?? null,
+          pointerEvents: element ? getComputedStyle(element).pointerEvents : null,
+        };
+      },
+      {
+        x: (box?.x ?? 0) + (box?.width ?? 0) * 0.22,
+        y: (box?.y ?? 0) + (box?.height ?? 0) * 0.58,
+      },
+    );
+
+    expect(hitTarget).toMatchObject({
+      tagName: "CANVAS",
+      pointerEvents: "auto",
+    });
+
+    watcher.assertNoFailures();
+  });
+
   test("mobile renders the responsive telemetry fallback", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     const watcher = await gotoAndCheck(page, "/en/showcase/digital-twin");
 
     await expect(
-      page.getByRole("heading", { name: "3D Digital Twin Command Center" }),
+      page.getByRole("heading", { name: "3D Semiconductor Test Line Twin" }),
     ).toBeVisible();
     await expect(page.getByTestId("mobile-fallback-panel")).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Line 7 telemetry map" }),
+      page.getByRole("heading", { name: "Test line telemetry map" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Select CMP-03" }),
+      page.getByRole("button", { name: "Select PB-01" }),
     ).toBeVisible();
 
     watcher.assertNoFailures();

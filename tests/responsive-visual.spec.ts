@@ -59,7 +59,7 @@ const mobileRoutes = [
   },
   {
     path: "/en/showcase/digital-twin",
-    heading: "3D Digital Twin Command Center",
+    heading: "3D Semiconductor Test Line Twin",
   },
   {
     path: "/en/showcase/semiconductor-design-explorer",

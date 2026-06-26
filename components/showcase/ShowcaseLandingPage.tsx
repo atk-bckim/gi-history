@@ -20,26 +20,26 @@ const landingCopy = {
   ko: {
     lab: "AI Web Design Lab",
     title: "AI로 구현하는 고난도 웹 쇼케이스",
-    body: "교육 콘텐츠와 연결된 산업형 인터랙티브 웹 예제입니다. 3D Digital Twin, 반도체 설계 탐색, agentic workflow 관제를 모두 실제 조작 가능한 쇼케이스로 제공합니다.",
-    primary: "Open Digital Twin",
+    body: "교육 콘텐츠와 연결된 산업형 인터랙티브 웹 예제입니다. 반도체 TEST 라인, 반도체 설계 탐색, agentic workflow 관제를 모두 실제 조작 가능한 쇼케이스로 제공합니다.",
+    primary: "Open Test Line",
     flagship: "Flagship Experience",
     previews: "Advanced Surfaces",
     build: "Build Pattern",
-    twinTitle: "3D Digital Twin Command Center",
+    twinTitle: "3D Semiconductor Test Line Twin",
     twinBody:
-      "반도체 Fab Line 7의 장비 상태, 센서, 온도 히트맵, 결함 경보, MCP 컨텍스트를 한 화면에서 조작합니다."
+      "웨이퍼 프로버, ATE 메인프레임, 패키지 테스트 핸들러 3종 장비를 10개 셀, 총 30대 구성으로 조작합니다."
   },
   en: {
     lab: "AI Web Design Lab",
     title: "High-complexity web showcases built with AI",
-    body: "Industrial interactive web examples connected to the learning content. 3D Digital Twin, semiconductor design, and agentic workflow control are all live, code-native showcases.",
-    primary: "Open Digital Twin",
+    body: "Industrial interactive web examples connected to the learning content. Semiconductor TEST line, semiconductor design, and agentic workflow control are all live, code-native showcases.",
+    primary: "Open Test Line",
     flagship: "Flagship Experience",
     previews: "Advanced Surfaces",
     build: "Build Pattern",
-    twinTitle: "3D Digital Twin Command Center",
+    twinTitle: "3D Semiconductor Test Line Twin",
     twinBody:
-      "Operate equipment status, sensors, temperature heatmaps, defect alarms, and MCP context for Semiconductor Fab Line 7."
+      "Operate three equipment classes across 10 repeated cells and 30 total tools: wafer probers, ATE mainframes, and package test handlers."
   }
 } satisfies Record<ShowcaseLocale, Record<string, string>>;
 
@@ -78,8 +78,8 @@ export function ShowcaseLandingPage({ locale = "en" }: ShowcaseLandingPageProps)
             <div className="mt-6 grid grid-cols-3 gap-3 text-sm">
               {[
                 { icon: RadioTower, label: "Telemetry" },
-                { icon: Layers3, label: "Cutaway toggles" },
-                { icon: BrainCircuit, label: "AI analysis" }
+                { icon: Layers3, label: "ATE cell" },
+                { icon: BrainCircuit, label: "Bin analysis" }
               ].map((item) => (
                 <div
                   key={item.label}

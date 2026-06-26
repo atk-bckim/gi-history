@@ -52,8 +52,8 @@ type DigitalTwinCommandCenterProps = {
 const copy = {
   ko: {
     lab: "AI Web Design Lab",
-    title: "3D Digital Twin Command Center",
-    subtitle: "Semiconductor Fab - Line 7",
+    title: "3D Semiconductor Test Line Twin",
+    subtitle: "OSAT Test Floor - Line T7",
     live: "Live",
     shadowMode: "Shadow Mode",
     layers: "LAYERS",
@@ -84,22 +84,22 @@ const copy = {
     defectRate: "DEFECT RATE",
     activeAlarms: "ACTIVE ALARMS",
     reducedMotion: "Reduced motion",
-    fallbackTitle: "Line 7 telemetry map",
+    fallbackTitle: "Test line telemetry map",
     floor: "1F",
     builtTitle: "Built with AI. Shippable by Devs.",
     builtBody:
-      "AI Web Design Lab demonstrates how AI-assisted design and development can deliver complex, production-ready industrial web applications.",
+      "AI Web Design Lab demonstrates a dense semiconductor TEST floor: 10 repeated cells, 30 equipment instances, and three tool classes rebuilt from real equipment references.",
     breakdown: "Explore the Build Breakdown",
     canvasUnavailable:
       "WebGL view is unavailable in this runtime. The telemetry map remains fully interactive.",
-    unitsPerHour: "units / hr",
+    unitsPerHour: "tested devices / hr",
     high: "High",
     total: "Total"
   },
   en: {
     lab: "AI Web Design Lab",
-    title: "3D Digital Twin Command Center",
-    subtitle: "Semiconductor Fab - Line 7",
+    title: "3D Semiconductor Test Line Twin",
+    subtitle: "OSAT Test Floor - Line T7",
     live: "Live",
     shadowMode: "Shadow Mode",
     layers: "LAYERS",
@@ -130,15 +130,15 @@ const copy = {
     defectRate: "DEFECT RATE",
     activeAlarms: "ACTIVE ALARMS",
     reducedMotion: "Reduced motion",
-    fallbackTitle: "Line 7 telemetry map",
+    fallbackTitle: "Test line telemetry map",
     floor: "1F",
     builtTitle: "Built with AI. Shippable by Devs.",
     builtBody:
-      "AI Web Design Lab demonstrates how AI-assisted design and development can deliver complex, production-ready industrial web applications.",
+      "AI Web Design Lab demonstrates a dense semiconductor TEST floor: 10 repeated cells, 30 equipment instances, and three tool classes rebuilt from real equipment references.",
     breakdown: "Explore the Build Breakdown",
     canvasUnavailable:
       "WebGL view is unavailable in this runtime. The telemetry map remains fully interactive.",
-    unitsPerHour: "units / hr",
+    unitsPerHour: "tested devices / hr",
     high: "High",
     total: "Total"
   }
@@ -188,7 +188,7 @@ export function DigitalTwinCommandCenter({
   const t = copy[locale];
   const [activeLayers, setActiveLayers] =
     useState<LayerId[]>(defaultActiveLayers);
-  const [selectedId, setSelectedId] = useState("CMP-03");
+  const [selectedId, setSelectedId] = useState("HDL-07");
   const [timeIndex, setTimeIndex] = useState(4);
   const [reducedMotion, setReducedMotion] = useState(false);
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -310,8 +310,8 @@ export function DigitalTwinCommandCenter({
             />
             <BuildBreakdownCard
               icon={Factory}
-              title="3D Digital Twin Engine"
-              body="React Three Fiber powers the factory scene while DOM overlays keep labels crisp and accessible."
+              title="3D Test Line Engine"
+              body="React Three Fiber powers 30 dense tool instances across wafer probers, ATE mainframes, and package test handlers."
             />
             <BuildBreakdownCard
               icon={Database}
@@ -444,6 +444,11 @@ function SceneFrame({
   const hasHeatmap = activeLayers.includes("heatmap");
   const hasSensors = activeLayers.includes("sensors");
   const hasDefects = activeLayers.includes("defects");
+  const labeledEquipment = equipment.filter(
+    (item) => item.id === selectedId || item.status !== "nominal"
+  );
+  const equipmentTypeCount = new Set(equipment.map((item) => item.type.en)).size;
+  const testCellCount = Math.round(equipment.length / equipmentTypeCount);
 
   return (
     <div className="relative min-h-[520px] overflow-hidden bg-[#08121b]">
@@ -464,7 +469,7 @@ function SceneFrame({
         )}
       </div>
 
-      <div className="absolute inset-0 hidden bg-[linear-gradient(120deg,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(30deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:44px_44px] opacity-70 lg:block" />
+      <div className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(120deg,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(30deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:44px_44px] opacity-70 lg:block" />
 
       {hasHeatmap ? (
         <div className="pointer-events-none absolute left-[48%] top-[37%] hidden h-[34%] w-[42%] -rotate-12 rounded-full bg-[linear-gradient(90deg,rgba(26,209,150,0.16),rgba(237,220,48,0.42),rgba(255,62,62,0.5),rgba(64,179,255,0.12))] blur-sm lg:block" />
@@ -495,10 +500,10 @@ function SceneFrame({
               >
                 <span>
                   <span className="block font-medium text-white">
-                    {item.type[locale]}
+                    {item.label}
                   </span>
                   <span className="text-xs text-slate-400">
-                    {item.temperatureC.toFixed(1)} C / {item.statusText[locale]}
+                    {item.type[locale]} / {item.temperatureC.toFixed(1)} C / {item.statusText[locale]}
                   </span>
                 </span>
                 <span
@@ -513,10 +518,14 @@ function SceneFrame({
       </div>
 
       <div className="pointer-events-none absolute inset-0 z-20 hidden lg:block">
-        {equipment.map((item) => (
+        <div className="absolute left-5 top-5 rounded border border-white/10 bg-black/35 px-3 py-2 text-xs text-slate-200 backdrop-blur">
+          {equipment.length} tools / {testCellCount} test cells / {equipmentTypeCount} equipment classes
+        </div>
+
+        {labeledEquipment.map((item) => (
           <button
             key={item.id}
-            className={`pointer-events-auto absolute min-w-[106px] rounded border px-3 py-2 text-left shadow-xl transition ${
+            className={`pointer-events-auto absolute min-w-[92px] rounded border px-2.5 py-2 text-left shadow-xl transition ${
               selectedId === item.id
                 ? "border-sky-300 bg-[#102437]/95 text-white"
                 : "border-sky-300/40 bg-[#0b1b28]/88 text-slate-200 hover:border-sky-200"
@@ -525,7 +534,7 @@ function SceneFrame({
             onClick={() => onSelect(item.id)}
             aria-label={`Open map hotspot ${item.id}`}
           >
-            <span className="block text-xs font-semibold">{item.area[locale]}</span>
+            <span className="block text-xs font-semibold">{item.label}</span>
             <span className={statusStyles[item.status].text}>
               {item.status === "alarm"
                 ? `${item.temperatureC.toFixed(1)} C`
@@ -538,12 +547,12 @@ function SceneFrame({
           ? equipment.map((item) => (
               <span
                 key={`${item.id}-sensor`}
-                className={`absolute h-3 w-3 rounded-full border border-sky-200 bg-sky-300 shadow-[0_0_18px_rgba(56,189,248,0.9)] ${
+                className={`absolute h-2 w-2 rounded-full border border-sky-200 bg-sky-300 shadow-[0_0_14px_rgba(56,189,248,0.85)] ${
                   motionPaused ? "" : "motion-safe:animate-pulse"
                 }`}
                 style={{
-                  left: `calc(${item.hotspot.left} + 76px)`,
-                  top: `calc(${item.hotspot.top} + 60px)`
+                  left: `calc(${item.hotspot.left} + 46px)`,
+                  top: `calc(${item.hotspot.top} + 44px)`
                 }}
               />
             ))
@@ -551,7 +560,7 @@ function SceneFrame({
 
         {hasDefects ? (
           <div className="absolute bottom-8 right-8 rounded border border-red-300/35 bg-red-500/10 px-3 py-2 text-sm text-red-100">
-            Selected defect cluster +17%
+            Retest bin cluster +17%
           </div>
         ) : null}
 

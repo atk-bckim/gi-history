@@ -49,7 +49,7 @@ export const layerOptions: {
   {
     id: "sensors",
     label: { ko: "센서", en: "Sensors" },
-    helper: { ko: "1,842 활성", en: "1,842 active" }
+    helper: { ko: "5,760 활성", en: "5,760 active" }
   },
   {
     id: "heatmap",
@@ -89,255 +89,387 @@ export const defaultActiveLayers: LayerId[] = [
 export const timelineFrames = [
   {
     time: "12:00",
-    throughput: 2610,
-    oee: 88.4,
-    defectRate: 0.22,
+    throughput: 37200,
+    oee: 91.2,
+    defectRate: 0.54,
     activeAlarms: 1,
     temperatureDrift: 0.4
   },
   {
     time: "12:30",
-    throughput: 2688,
-    oee: 88.9,
-    defectRate: 0.25,
+    throughput: 38480,
+    oee: 91.6,
+    defectRate: 0.61,
     activeAlarms: 1,
     temperatureDrift: 0.7
   },
   {
     time: "13:00",
-    throughput: 2756,
-    oee: 89.3,
-    defectRate: 0.31,
+    throughput: 39720,
+    oee: 92.1,
+    defectRate: 0.58,
     activeAlarms: 2,
     temperatureDrift: 1.2
   },
   {
     time: "13:30",
-    throughput: 2811,
-    oee: 89.5,
-    defectRate: 0.35,
+    throughput: 40560,
+    oee: 92.4,
+    defectRate: 0.73,
     activeAlarms: 2,
     temperatureDrift: 1.8
   },
   {
     time: "14:30",
-    throughput: 2842,
-    oee: 89.7,
-    defectRate: 0.37,
+    throughput: 39280,
+    oee: 91.8,
+    defectRate: 0.91,
     activeAlarms: 3,
     temperatureDrift: 2.4
   },
   {
     time: "15:00",
-    throughput: 2794,
-    oee: 89.1,
-    defectRate: 0.41,
+    throughput: 38940,
+    oee: 90.2,
+    defectRate: 0.86,
     activeAlarms: 3,
     temperatureDrift: 2.1
   }
 ];
 
-export const equipmentTelemetry: Equipment[] = [
-  {
-    id: "CVD-04",
-    label: "CVD-04",
-    type: { ko: "증착 챔버", en: "CVD Chamber" },
-    area: { ko: "박막 공정", en: "Thin Films" },
-    status: "warning",
-    statusText: { ko: "주의", en: "Watch" },
-    uptime: "08d 13h 44m",
-    temperatureC: 58.1,
-    throughput: 690,
-    riskScore: 54,
-    trend: 6,
-    hotspot: { left: "22%", top: "27%" },
-    position3d: [-3.4, 0.45, -1.3],
-    analysis: {
-      title: {
-        ko: "배기 압력 변화 감지",
-        en: "Exhaust pressure drift detected"
-      },
-      summary: {
-        ko: "압력 편차가 누적되어 다음 PM 전 필터 점검이 필요합니다.",
-        en: "Pressure variance is accumulating ahead of the next PM window."
-      },
-      recommendedActions: [
-        {
-          ko: "챔버 배기 로그와 필터 압력 추세를 비교합니다.",
-          en: "Compare chamber exhaust logs with filter pressure trends."
-        },
-        {
-          ko: "야간 교대 전에 레시피 보정값을 승인합니다.",
-          en: "Approve the recipe offset before the night shift."
-        }
-      ]
-    },
-    logs: [
-      {
-        time: "14:20",
-        severity: "warning",
-        text: { ko: "배기 압력 편차", en: "Exhaust pressure variance" }
-      },
-      {
-        time: "14:02",
-        severity: "nominal",
-        text: { ko: "증착 속도 안정", en: "Deposition rate stable" }
-      }
-    ]
-  },
-  {
-    id: "PVD-02",
-    label: "PVD-02",
-    type: { ko: "PVD 모듈", en: "PVD Module" },
-    area: { ko: "금속 배선", en: "Metallization" },
-    status: "nominal",
-    statusText: { ko: "정상", en: "Normal" },
-    uptime: "19d 01h 08m",
-    temperatureC: 47.5,
-    throughput: 734,
-    riskScore: 18,
-    trend: -2,
-    hotspot: { left: "41%", top: "58%" },
-    position3d: [-0.7, 0.45, 1.1],
-    analysis: {
-      title: {
-        ko: "공정 안정권 유지",
-        en: "Process holding inside control band"
-      },
-      summary: {
-        ko: "막 두께와 전력 곡선이 최근 90분 동안 정상 범위입니다.",
-        en: "Film thickness and power curves are inside range for 90 minutes."
-      },
-      recommendedActions: [
-        {
-          ko: "현재 레시피와 교대 기준을 유지합니다.",
-          en: "Keep the current recipe and shift thresholds."
-        },
-        {
-          ko: "정상 샘플을 후속 이상 탐지 기준으로 저장합니다.",
-          en: "Save the healthy sample as an anomaly baseline."
-        }
-      ]
-    },
-    logs: [
-      {
-        time: "14:16",
-        severity: "nominal",
-        text: { ko: "플라즈마 전력 안정", en: "Plasma power stable" }
-      },
-      {
-        time: "13:54",
-        severity: "nominal",
-        text: { ko: "막 두께 정상", en: "Film thickness in range" }
-      }
-    ]
-  },
-  {
-    id: "ETCH-07",
-    label: "ETCH-07",
-    type: { ko: "식각 클러스터", en: "Etch Cluster" },
-    area: { ko: "식각", en: "Etch" },
-    status: "warning",
-    statusText: { ko: "주의", en: "Watch" },
-    uptime: "05d 22h 17m",
-    temperatureC: 62.3,
-    throughput: 618,
-    riskScore: 61,
-    trend: 9,
-    hotspot: { left: "51%", top: "20%" },
-    position3d: [1.1, 0.45, -1.9],
-    analysis: {
-      title: {
-        ko: "엔드포인트 신호 변동 증가",
-        en: "Endpoint signal variance rising"
-      },
-      summary: {
-        ko: "최근 로트에서 광학 엔드포인트 변동성이 증가했습니다.",
-        en: "Optical endpoint variance increased across recent lots."
-      },
-      recommendedActions: [
-        {
-          ko: "레시피별 엔드포인트 파형을 재검토합니다.",
-          en: "Review endpoint traces by recipe."
-        },
-        {
-          ko: "챔버 매칭 상태를 CMP 경보와 함께 확인합니다.",
-          en: "Check chamber matching alongside the CMP alarm."
-        }
-      ]
-    },
-    logs: [
-      {
-        time: "14:24",
-        severity: "warning",
-        text: { ko: "엔드포인트 흔들림", en: "Endpoint jitter warning" }
-      },
-      {
-        time: "14:11",
-        severity: "nominal",
-        text: { ko: "챔버 매칭 통과", en: "Chamber match passed" }
-      }
-    ]
-  },
-  {
-    id: "CMP-03",
-    label: "CMP-03",
-    type: { ko: "CMP 폴리셔", en: "CMP Polisher" },
-    area: { ko: "습식 공정", en: "Wet Process" },
-    status: "alarm",
-    statusText: { ko: "알람", en: "Alarm" },
-    uptime: "11d 04h 22m",
-    temperatureC: 82.7,
-    throughput: 800,
-    riskScore: 86,
-    trend: 14,
-    hotspot: { left: "68%", top: "42%" },
-    position3d: [2.9, 0.45, 0.25],
-    analysis: {
-      title: {
-        ko: "슬러리 온도 편차 감지",
-        en: "Slurry temperature deviation detected"
-      },
-      summary: {
-        ko: "슬러리 온도와 유량이 결함률 상승과 함께 움직입니다.",
-        en: "Slurry temperature and flow are moving with the defect-rate rise."
-      },
-      recommendedActions: [
-        {
-          ko: "패드 상태와 컨디셔너 압력을 점검합니다.",
-          en: "Inspect pad condition and conditioner pressure."
-        },
-        {
-          ko: "슬러리 농도와 유량 센서를 교차 확인합니다.",
-          en: "Cross-check slurry concentration and flow sensors."
-        }
-      ]
-    },
-    logs: [
-      {
-        time: "14:31",
-        severity: "alarm",
-        text: { ko: "온도 고경보", en: "Temperature high alarm" }
-      },
-      {
-        time: "14:29",
-        severity: "warning",
-        text: { ko: "슬러리 유량 변동", en: "Slurry flow rate fluctuation" }
-      },
-      {
-        time: "14:22",
-        severity: "warning",
-        text: { ko: "진동 임계값 경고", en: "Vibration threshold warning" }
-      }
-    ]
-  }
+type TestEquipmentKind = "prober" | "ate" | "handler";
+
+const testCellSlots = [
+  { x: -7.2, z: -3.3, bay: 0, column: 0 },
+  { x: -3.6, z: -3.3, bay: 0, column: 1 },
+  { x: 0, z: -3.3, bay: 0, column: 2 },
+  { x: 3.6, z: -3.3, bay: 0, column: 3 },
+  { x: 7.2, z: -3.3, bay: 0, column: 4 },
+  { x: -7.2, z: 3.3, bay: 1, column: 0 },
+  { x: -3.6, z: 3.3, bay: 1, column: 1 },
+  { x: 0, z: 3.3, bay: 1, column: 2 },
+  { x: 3.6, z: 3.3, bay: 1, column: 3 },
+  { x: 7.2, z: 3.3, bay: 1, column: 4 }
 ];
 
+const testEquipmentRows: Record<
+  TestEquipmentKind,
+  {
+    prefix: string;
+    zOffset: number;
+    type: LocalizedText;
+    area: LocalizedText;
+    baseTemperature: number;
+    baseThroughput: number;
+  }
+> = {
+  prober: {
+    prefix: "PB",
+    zOffset: -1,
+    type: { ko: "웨이퍼 프로버", en: "Wafer prober" },
+    area: { ko: "웨이퍼 소트", en: "Wafer Sort" },
+    baseTemperature: 40.2,
+    baseThroughput: 1220
+  },
+  ate: {
+    prefix: "ATE",
+    zOffset: 0,
+    type: { ko: "SoC ATE 메인프레임", en: "SoC ATE mainframe" },
+    area: { ko: "ATE 테스트", en: "ATE Test" },
+    baseTemperature: 36.4,
+    baseThroughput: 1380
+  },
+  handler: {
+    prefix: "HDL",
+    zOffset: 1,
+    type: { ko: "패키지 테스트 핸들러", en: "Package test handler" },
+    area: { ko: "파이널 테스트", en: "Final Test" },
+    baseTemperature: 56.2,
+    baseThroughput: 1450
+  }
+};
+
+function padCell(cellIndex: number) {
+  return String(cellIndex + 1).padStart(2, "0");
+}
+
+function statusForCell(kind: TestEquipmentKind, cellIndex: number): EquipmentStatus {
+  if (kind === "handler" && cellIndex === 6) {
+    return "alarm";
+  }
+
+  if (kind === "prober" && [1, 7].includes(cellIndex)) {
+    return "warning";
+  }
+
+  if (kind === "ate" && [3, 8].includes(cellIndex)) {
+    return "warning";
+  }
+
+  if (kind === "handler" && [2, 9].includes(cellIndex)) {
+    return "warning";
+  }
+
+  return "nominal";
+}
+
+function statusText(status: EquipmentStatus): LocalizedText {
+  return {
+    ko: status === "alarm" ? "알람" : status === "warning" ? "주의" : "정상",
+    en: status === "alarm" ? "Alarm" : status === "warning" ? "Watch" : "Normal"
+  };
+}
+
+function riskScoreForStatus(status: EquipmentStatus, cellIndex: number) {
+  if (status === "alarm") {
+    return 86;
+  }
+
+  if (status === "warning") {
+    return 48 + ((cellIndex * 7) % 13);
+  }
+
+  return 18 + ((cellIndex * 5) % 16);
+}
+
+function analysisForEquipment(
+  kind: TestEquipmentKind,
+  status: EquipmentStatus,
+  label: string
+): Equipment["analysis"] {
+  if (kind === "prober") {
+    return {
+      title: {
+        ko:
+          status === "nominal"
+            ? `${label} 프로브 접촉 안정`
+            : `${label} 프로브 카드 접촉 편차 감지`,
+        en:
+          status === "nominal"
+            ? `${label} probe contact stable`
+            : `${label} probe-card contact drift detected`
+      },
+      summary: {
+        ko:
+          status === "nominal"
+            ? "웨이퍼맵 BIN1, touchdown force, Auto Z 보정이 관리 범위입니다."
+            : "에지 다이 재접촉률과 probe mark 편차가 같은 웨이퍼 존에서 증가합니다.",
+        en:
+          status === "nominal"
+            ? "Wafer map BIN1, touchdown force, and Auto Z calibration are inside control range."
+            : "Edge-die retouch rate and probe-mark variance are rising in the same wafer zone."
+      },
+      recommendedActions: [
+        {
+          ko: "웨이퍼맵과 프로브 마크 이미지를 같은 로트 기준으로 비교합니다.",
+          en: "Compare wafer maps and probe-mark images for the same lot."
+        },
+        {
+          ko: "다음 FOUP 투입 전 Auto Z 보정과 카드 클리닝 필요 여부를 확인합니다.",
+          en: "Check whether Auto Z calibration or card cleaning is needed before the next FOUP."
+        }
+      ]
+    };
+  }
+
+  if (kind === "ate") {
+    return {
+      title: {
+        ko:
+          status === "nominal"
+            ? `${label} 멀티사이트 효율 안정`
+            : `${label} 사이트 효율 편차 감지`,
+        en:
+          status === "nominal"
+            ? `${label} multisite efficiency stable`
+            : `${label} site efficiency drift detected`
+      },
+      summary: {
+        ko:
+          status === "nominal"
+            ? "핀 전원, RF, HSIO 계측 모듈과 DUT 보드 온도가 안정권입니다."
+            : "특정 사이트의 pattern retry와 계측 대기 시간이 동시에 증가했습니다.",
+        en:
+          status === "nominal"
+            ? "Pin power, RF, HSIO instruments, and DUT-board temperature are stable."
+            : "Pattern retry and instrument wait time are rising on a specific test site."
+      },
+      recommendedActions: [
+        {
+          ko: "사이트별 STDF bin, pattern retry, 계측 대기 시간을 비교합니다.",
+          en: "Compare STDF bins, pattern retry, and instrument wait time by test site."
+        },
+        {
+          ko: "정상 셀의 패턴을 yield-learning 기준선으로 보존합니다.",
+          en: "Preserve healthy-cell patterns as the yield-learning baseline."
+        }
+      ]
+    };
+  }
+
+  return {
+    title: {
+      ko:
+        status === "alarm"
+          ? `${label} 컨택터 재테스트 클러스터`
+          : status === "warning"
+            ? `${label} 트레이 핸들링 편차 감지`
+            : `${label} 핸들러 이송 안정`,
+      en:
+        status === "alarm"
+          ? `${label} contactor retest cluster`
+          : status === "warning"
+            ? `${label} tray-handling variance detected`
+            : `${label} handler transfer stable`
+    },
+    summary: {
+      ko:
+        status === "alarm"
+          ? "BGA 패키지 투입 트레이에서 socket A3 접촉 불량과 bin5 증가가 동시에 발생합니다."
+          : status === "warning"
+            ? "픽업 vacuum 편차와 hot corner retest가 같은 tray window에서 증가합니다."
+            : "컨택터 온도, 픽업 vacuum, 양품 tray 분류가 정상 범위입니다.",
+      en:
+        status === "alarm"
+          ? "Socket A3 contact misses and bin5 escapes are rising on incoming BGA trays."
+          : status === "warning"
+            ? "Pickup-vacuum variance and hot-corner retest are rising in the same tray window."
+            : "Contactor temperature, pickup vacuum, and good-tray sorting are inside range."
+    },
+    recommendedActions: [
+      {
+        ko: "컨택터 세척 주기와 socket resistance를 셀 단위로 재확인합니다.",
+        en: "Recheck contactor cleaning interval and socket resistance by cell."
+      },
+      {
+        ko: "핫/콜드 온도 코너별 retest bin map을 분리해 확인합니다.",
+        en: "Split retest bin maps by hot and cold temperature corners."
+      }
+    ]
+  };
+}
+
+function logsForEquipment(
+  kind: TestEquipmentKind,
+  status: EquipmentStatus
+): Equipment["logs"] {
+  if (kind === "prober") {
+    return [
+      {
+        time: "14:25",
+        severity: status,
+        text: {
+          ko: status === "nominal" ? "웨이퍼맵 BIN1 정상" : "에지 다이 재접촉률 상승",
+          en: status === "nominal" ? "Wafer map BIN1 in range" : "Edge-die retouch rate rising"
+        }
+      },
+      {
+        time: "14:08",
+        severity: "nominal",
+        text: { ko: "Auto Z 보정 완료", en: "Auto Z calibration complete" }
+      }
+    ];
+  }
+
+  if (kind === "ate") {
+    return [
+      {
+        time: "14:18",
+        severity: status,
+        text: {
+          ko: status === "nominal" ? "핀 스케일 계측 안정" : "site 6 retry 증가",
+          en: status === "nominal" ? "Pin-scale instruments stable" : "Site 6 retry rising"
+        }
+      },
+      {
+        time: "14:03",
+        severity: "nominal",
+        text: { ko: "DUT 보드 온도 정상", en: "DUT board temperature in range" }
+      }
+    ];
+  }
+
+  return [
+    {
+      time: "14:31",
+      severity: status,
+      text: {
+        ko:
+          status === "alarm"
+            ? "socket A3 접촉 저항 고경보"
+            : status === "warning"
+              ? "hot corner retest +11%"
+              : "양품 tray 분류 정상",
+        en:
+          status === "alarm"
+            ? "Socket A3 contact resistance high"
+            : status === "warning"
+              ? "Hot-corner retest +11%"
+              : "Good-tray sorting normal"
+      }
+    },
+    {
+      time: "14:10",
+      severity: status === "nominal" ? "nominal" : "warning",
+      text: { ko: "트레이 픽업 vacuum 추적", en: "Tray pickup vacuum tracked" }
+    }
+  ];
+}
+
+function buildTestEquipment(
+  kind: TestEquipmentKind,
+  cellIndex: number,
+  slot: (typeof testCellSlots)[number]
+): Equipment {
+  const row = testEquipmentRows[kind];
+  const status = statusForCell(kind, cellIndex);
+  const cellNumber = padCell(cellIndex);
+  const label = `${row.prefix}-${cellNumber}`;
+  const riskScore = riskScoreForStatus(status, cellIndex);
+  const trend = status === "alarm" ? 14 : status === "warning" ? 5 + (cellIndex % 5) : -4 + (cellIndex % 3);
+  const hotspotLeft = `${12 + slot.column * 17.6}%`;
+  const hotspotTopBase = slot.bay === 0 ? 26 : 57;
+  const hotspotTopOffset = kind === "prober" ? -5 : kind === "ate" ? 4 : 13;
+
+  return {
+    id: label,
+    label,
+    type: row.type,
+    area: row.area,
+    status,
+    statusText: statusText(status),
+    uptime: `${String(3 + ((cellIndex * 3) % 19)).padStart(2, "0")}d ${String(
+      2 + ((cellIndex * 5) % 20)
+    ).padStart(2, "0")}h ${String(8 + ((cellIndex * 7) % 48)).padStart(2, "0")}m`,
+    temperatureC:
+      row.baseTemperature +
+      cellIndex * 0.35 +
+      (status === "alarm" ? 16.2 : status === "warning" ? 4.3 : 0),
+    throughput: row.baseThroughput + cellIndex * 38 - (status === "alarm" ? 210 : 0),
+    riskScore,
+    trend,
+    hotspot: {
+      left: hotspotLeft,
+      top: `${hotspotTopBase + hotspotTopOffset}%`
+    },
+    position3d: [slot.x, 0.42, slot.z + row.zOffset],
+    analysis: analysisForEquipment(kind, status, label),
+    logs: logsForEquipment(kind, status)
+  };
+}
+
+export const equipmentTelemetry: Equipment[] = testCellSlots.flatMap((slot, cellIndex) => [
+  buildTestEquipment("prober", cellIndex, slot),
+  buildTestEquipment("ate", cellIndex, slot),
+  buildTestEquipment("handler", cellIndex, slot)
+]);
+
 export const mcpContextSources = [
-  "MES (Manufacturing)",
-  "CMMS (Maintenance)",
-  "Historian (PI System)",
-  "Quality (SPC)"
+  "ATE logs (STDF / WAT)",
+  "Wafer map (BIN / retest)",
+  "Handler GEM / SECS events",
+  "Socket PM + CMMS",
+  "Quality SPC / Yield learning"
 ];
 
 export type PreviewShowcaseId =

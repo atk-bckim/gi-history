@@ -9,12 +9,13 @@ describe("AI Web Design Lab showcase components", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: /3D Digital Twin Command Center/i
+        name: /3D Semiconductor Test Line Twin/i
       })
     ).toBeTruthy();
-    expect(screen.getByText(/Semiconductor Fab - Line 7/i)).toBeTruthy();
-    expect(screen.getByText(/2,842/i)).toBeTruthy();
-    expect(screen.getByText(/89.7%/i)).toBeTruthy();
+    expect(screen.getByText(/OSAT Test Floor - Line T7/i)).toBeTruthy();
+    expect(screen.getByText(/39,280/i)).toBeTruthy();
+    expect(screen.getByText(/91.8%/i)).toBeTruthy();
+    expect(screen.getByText(/30 tools \/ 10 test cells \/ 3 equipment classes/i)).toBeTruthy();
 
     for (const layer of [
       "Sensors",
@@ -32,10 +33,10 @@ describe("AI Web Design Lab showcase components", () => {
     fireEvent.change(timeSlider, { target: { value: "4" } });
     expect(screen.getByText(/14:30/i)).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: /Select CMP-03/i }));
-    expect(screen.getByText(/CMP-03/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Select PB-02/i }));
+    expect(screen.getByRole("heading", { name: "PB-02" })).toBeTruthy();
     expect(
-      screen.getByText(/Slurry temperature deviation detected/i)
+      screen.getByText(/PB-02 probe-card contact drift detected/i)
     ).toBeTruthy();
 
     const defectsToggle = screen.getByRole("checkbox", {
